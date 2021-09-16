@@ -49,4 +49,3 @@
 
 # 그 외 라이브러리 및 참고자료
 + mariadb JSON - https://bstar36.tistory.com/359
-+ react-calendar -
