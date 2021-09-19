@@ -1,25 +1,22 @@
-import logo from './logo.svg';
-import './App.css';
+import * as ReactRouter from 'react-router-dom'
+import AccessToken from './commons/AccessToken'
+import Login from './commons/Login'
+import OAuth2 from './commons/OAuth2'
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ReactRouter.BrowserRouter>
+      <ReactRouter.Switch>
+        <ReactRouter.Route exact path="/oauth">
+          <OAuth2 />
+        </ReactRouter.Route>
+        <ReactRouter.Route exact path="/login">
+          <Login />
+        </ReactRouter.Route>
+        <ReactRouter.Route path="*">
+          <AccessToken />
+        </ReactRouter.Route>
+      </ReactRouter.Switch>
+    </ReactRouter.BrowserRouter>
   );
 }
-
-export default App;
