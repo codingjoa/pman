@@ -27,9 +27,8 @@ export default function User() {
     }
     return (
       <>
-        <h4>안녕하세요. {user.profileName}님!</h4>
-        <img src={user.profileImage ? user.profileImage : user.profileImageDefault} />
-        <img src={user.profileImageDefault} />
+        <h4>안녕하세요. {user?.profileName}님!</h4>
+        <img src={user?.profileImage} />
       </>
     );
   }, [ user ]);

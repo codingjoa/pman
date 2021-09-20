@@ -11,8 +11,8 @@ const MARIADB_PORT = process.env.MARIADB_PORT ?? 3306;
 const MARIADB_NAME = process.env.MARIADB_NAME ?? 'react';
 const SQLITE_DIR = path.join((process.env.SQLITE_DIR ?? ROOT), './Sqlite3');
 const kakao = process.env.APIKEY_KAKAO && require(path.join(ROOT, process.env.APIKEY_KAKAO));
-const APIKEY_KAKAO = kakao.apiKey;
-const CALLBACK_KAKAO = kakao.callbackURI;
+const APIKEY_KAKAO = kakao?.apiKey;
+const CALLBACK_KAKAO = kakao?.callbackURI;
 
 module.exports = {
   ROOT, PORT,

@@ -1,11 +1,11 @@
 const maria = require('../server/database');
-const { NotFoundError } = require('../server/Types/Error');
+const { NotFoundError, UnauthorizationError } = require('../server/Types/Error');
 
 module.exports = {
   Read(req, res, next) {
     const uuid = req.user?.id;
     if(!uuid) {
-      throw new Error('paramErr');
+      throw new UnauthorizationError();
     }
     maria('query')('select * from user where uuid=?', [
       uuid
@@ -15,32 +15,31 @@ module.exports = {
         res.json({
           uuid,
           profileName: profile.userProfileName,
-          profileImage: profile.userProfileImg,
-          profileImageDefault: profile.userProfileImgDefault
+          profileImage: profile?.userProfileImg ?? profile.userProfileImgDefault
         });
       } else {
         throw new NotFoundError('존재하지 않는 사용자입니다.');
       }
     })().catch(err => next(err));
-
-/*
-    .then(rows => {
-      // 위에처럼 중간 콜백을 주니까 res.json이나 res.send하면 이미 보냈다고
-      // 적반하장이더라 이뭐병
-      // Promise.then보다 콜백이 먼저라고 ㅡㅡ
-      if(rows[0] && rows[0].length) {
-        const profile = rows[0][0];
-        console.log(profile);
-        res.json({
-          uuid,
-          profileName: profile.userProfileName,
-          profileImage: profile.userProfileImg,
-          profileImageDefault: profile.userProfileImgDefault
-        });
-      } else {
-        throw new NotFoundError('존재하지 않는 사용자입니다.');
-      }
-    })
-    */
+  },
+  Patch(req, res, next) {
+    const uuid = req.user?.id;
+    if(!uuid) {
+      throw new UnauthorizationError();
+    }
+    const query = maria('query');
+    if(req.body?.profileName) {
+      query('update user set userProfileName=? where uuid=?', [
+        req.body.profileName,
+        uuid
+      ])(result => {
+        if(!result.affectedRows) {
+          throw new Error('적용되지 않았습니다.');
+        }
+      });
+    }
+    query().then(() => {
+      res.redirect('/api/v1/user/me');
+    }).catch(err => next(err));
   }
 };

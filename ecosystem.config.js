@@ -23,6 +23,7 @@ module.exports = {
       'MARIADB': true,
       'JWT': true,
       'PROXY': true,
+      'APIKEY_KAKAO': './secret/key.kakao.js',
       'MARIADB_NAME': 'pman'
     },
     env_dev: {
