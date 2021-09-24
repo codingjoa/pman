@@ -3,17 +3,17 @@ const { NotFoundError, UnauthorizationError } = require('../server/Types/Error')
 
 module.exports = {
   Read(req, res, next) {
-    const uuid = req.user?.id;
-    if(!uuid) {
+    const userID = req.user?.id;
+    if(!userID) {
       throw new UnauthorizationError();
     }
-    maria('query')('select * from user where uuid=?', [
-      uuid
+    maria('query')('select * from user where userID=?', [
+      userID
     ])(result => {
       if(result.rows.length) {
         const profile = result.rows[0];
         res.json({
-          uuid,
+          userID,
           profileName: profile.userProfileName,
           profileImage: profile?.userProfileImg ?? profile.userProfileImgDefault
         });
@@ -23,23 +23,25 @@ module.exports = {
     })().catch(err => next(err));
   },
   Patch(req, res, next) {
-    const uuid = req.user?.id;
-    if(!uuid) {
+    const userID = req.user?.id;
+    if(!userID) {
       throw new UnauthorizationError();
     }
     const query = maria('query');
     if(req.body?.profileName) {
-      query('update user set userProfileName=? where uuid=?', [
+      query('update user set userProfileName=? where userID=?', [
         req.body.profileName,
-        uuid
+        userID
       ])(result => {
         if(!result.affectedRows) {
           throw new Error('적용되지 않았습니다.');
         }
       });
     }
-    query().then(() => {
-      res.redirect('/api/v1/user/me');
-    }).catch(err => next(err));
+    query(() => {
+      res.json({
+        userID
+      });
+    })().catch(err => next(err));
   }
 };

@@ -24,11 +24,13 @@ module.exports = {
       'JWT': true,
       'PROXY': true,
       'APIKEY_KAKAO': './secret/key.kakao.js',
-      'MARIADB_NAME': 'pman'
+      'MARIADB_NAME': 'pman',
+      'FRONT_DOMAIN': 'https://txshi.iptime.org'
     },
     env_dev: {
       'DEBUG': '1',
-      'ERROR': '1'
+      'ERROR': '1',
+      'FRONT_DOMAIN': 'http://txshi.iptime.org:50080'
     }
   }],
 

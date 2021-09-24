@@ -13,10 +13,11 @@ const SQLITE_DIR = path.join((process.env.SQLITE_DIR ?? ROOT), './Sqlite3');
 const kakao = process.env.APIKEY_KAKAO && require(path.join(ROOT, process.env.APIKEY_KAKAO));
 const APIKEY_KAKAO = kakao?.apiKey;
 const CALLBACK_KAKAO = kakao?.callbackURI;
+const FRONT_DOMAIN = process.env.FRONT_DOMAIN ?? 'localhost';
 
 module.exports = {
   ROOT, PORT,
   PROXY, MARIADB, SQLITE, JWT, SESSION,
   MARIADB_HOST, MARIADB_PORT, MARIADB_NAME, SQLITE_DIR,
-  APIKEY_KAKAO
+  APIKEY_KAKAO, CALLBACK_KAKAO, FRONT_DOMAIN
 }

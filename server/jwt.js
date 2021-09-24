@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 // const key
-const iss = 'development'
+const iss = 'development';
 function createJWT(
   id, expiresIn
 ) {

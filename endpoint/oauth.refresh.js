@@ -6,8 +6,8 @@ module.exports = {
   Read(req, res) {
     const oldRefreshToken = req.cookies?.refreshToken;
     if(oldRefreshToken) {
-      const uuid = validateJWT(oldRefreshToken);
-      const { accessToken, refreshToken, expiresIn } = createTokens(uuid);
+      const userID = validateJWT(oldRefreshToken);
+      const { accessToken, refreshToken, expiresIn } = createTokens(userID);
       // XSS, CSRF 취약점
       res.cookie('refreshToken', refreshToken, {
         maxAge: expiresIn,

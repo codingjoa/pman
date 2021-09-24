@@ -23,13 +23,13 @@ module.exports = {
     .then(async body => {
       const id = body?.id;
       const userAccountID = `${id}`;
-      const { uuid, signUp, profile } = await isSignUp(
+      const { userID, signUp, profile } = await isSignUp(
         userAccountID,
         body?.properties?.nickname,
         body?.properties?.profile_image,
         kakao.accountType
       );
-      const { accessToken, refreshToken, expiresIn } = createTokens(uuid);
+      const { accessToken, refreshToken, expiresIn } = createTokens(userID);
       // XSS, CSRF 취약점
       res.cookie('refreshToken', refreshToken, {
         maxAge: expiresIn,

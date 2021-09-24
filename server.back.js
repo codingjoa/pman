@@ -7,6 +7,13 @@ oauth('/kakao', require('./endpoint/oauth.kakao'));
 oauth('/refresh', require('./endpoint/oauth.refresh'));
 const user = api('/user');
 user('/me', require('./endpoint/user.me'));
+const team = api('/team');
+team('/', require('./endpoint/team'));
+team('/invite', require('./endpoint/team.invite'));
+team('/:teamID', require('./endpoint/team.detail'));
+team('/:teamID/schedule', require('./endpoint/team.detail.schedule'));
+team('/:teamID/user/:userID', require('./endpoint/team.detail.user'));
+
 api('/test')('/:p1/:p2/:p3/:p4', {
   Read(req, res) {
     const { p1, p2, p3, p4 } = req.params;

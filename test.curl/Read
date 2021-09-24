@@ -1,0 +1,2 @@
+#!/bin/bash
+curl -H "Authorization: Bearer $ACCESS_TOKEN" -X GET $URI | json && echo

@@ -1,4 +1,3 @@
-const uuidv4 = require('uuid').v4;
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -49,32 +48,31 @@ async function createDefaultProfile() {
 async function isSignUp(
   userAccountID, name, image, type
 ) {
-  const result = await maria('query')('select user.uuid, user.userBlocked from user where userAccountID=? and userAccountType=?', [ userAccountID, type ])();
+  const result = await maria('query')('select user.userID, user.userBlocked from user where userAccountID=? and userAccountType=?', [ userAccountID, type ])();
   if(!result[0].length) {
-    const uuid = uuidv4();
     const { defaultName, profileImageDefault } = await createDefaultProfile();
     const profileName = name ?? defaultName;
     const profileImage = image ?? null;
     const userAccountType = type;
-    await maria('query')('insert into user (uuid, userProfileName, userProfileImgDefault, userProfileImg, userAccountID, userAccountType) values (?, ?, ?, ?, ?, ?)', [
-      uuid, profileName, profileImageDefault, profileImage, userAccountID, userAccountType
+    const userID = await maria('query')('insert into user (userProfileName, userProfileImgDefault, userProfileImg, userAccountID, userAccountType) values (?, ?, ?, ?, ?)', [
+      profileName, profileImageDefault, profileImage, userAccountID, userAccountType
     ])(result => {
       if(!result.affectedRows) {
         throw new Error('db 오류');
       }
-    })();
+    })().then(results => results[0].insertId);
     return {
-      uuid,
+      userID,
       signUp: true
     };
   }
-  const uuid = result[0][0].uuid;
+  const userID = result[0][0].userID;
   const userBlocked = result[0][0].userBlocked;
   if(userBlocked) {
     throw new UnauthorizationError('blocked user');
   }
   return {
-    uuid,
+    userID,
     signUp: false
   };
 }

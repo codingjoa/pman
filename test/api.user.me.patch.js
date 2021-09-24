@@ -1,12 +1,16 @@
 const axios = require('axios');
-
-
+const except = require('chai').except;
 async function main() {
   const accessToken = process.env.ACCESS_TOKEN;
   axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-  axios.patch('http://txshi.iptime.org:50080/api/v1/user/me/', {
+  const res = await axios.patch('http://txshi.iptime.org:50080/api/v1/user/me/', {
     profileName: '택현'
-  }).then(r => console.log(r.data), err => console.error(err));
+  });
+  except(res.status).to.equal(200);
 }
 
-main();
+describe('api.v1.user.me', () => {
+  it('patch: profileName', done => {
+    main().then(done, done);
+  })
+});

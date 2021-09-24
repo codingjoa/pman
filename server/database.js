@@ -5,16 +5,51 @@ const pool = mariadb.createPool(config);
 // concept
 // maria('query...', { paramStatements })('query...',{})();
 const sym = Symbol('set');
-async function mariaBatch(query, batch) {
+async function* mariaGenerator() {
+  const conn = await pool.getConnection();
+  await conn.beginTransaction();
+  let options = null;
+  let queryResult = true;
+  try {
+    options = yield queryResult;
+    while(options !== undefined) {
+      if(options instanceof Error) {
+        throw options;
+      }
+      const result = await conn.query(options?.query, options?.state);
+      queryResult = {
+        rows: Array.from(result),
+        affectedRows: result?.affectedRows,
+        lastID: result?.insertId
+      };
+      options = yield queryResult;
+    }
+    queryResult = true;
+    await conn.commit();
+  } catch(err) {
+    queryResult = false;
+    await conn.rollback();
+  }
+  await conn.release();
+  console.log('released');
+  return queryResult;
+}
+
+async function mariaBatchExecute(query, callback, batch) {
+  let storage = null;
   const conn = await pool.getConnection();
   await conn.beginTransaction();
   try {
     await conn.batch(query, batch);
+    storage = {
+      ...(callback instanceof Function ? await callback() : null)
+    };
     await conn.commit();
   } catch(err) {
     await conn.rollback();
   }
   await conn.release();
+  return storage;
 }
 
 async function mariaExecute() {
@@ -22,18 +57,22 @@ async function mariaExecute() {
   await conn.beginTransaction();
   const resultSet = [];
   let resultSetIndex = 0;
-  let lastReturn = undefined;
+  let queryResult = undefined;
+  let storage = {};
   try {
     const iterator = this[sym];
     for(const { param, query, callback } of iterator) {
-      if(callback) {
-        lastReturn = callback(lastReturn);
+      if(callback instanceof Function) {
+        storage = {
+          ...storage,
+          ...(await callback(queryResult, storage))
+        };
         //resultSet = [];
         //resultSetIndex = 0;
       } else {
         const result = await conn.query(query, param);
         resultSet[resultSetIndex++] = result;
-        lastReturn = {
+        queryResult = {
           rows: Array.from(result),
           affectedRows: result?.affectedRows,
           lastID: result?.insertId
@@ -50,21 +89,25 @@ async function mariaExecute() {
   return resultSet;
 }
 
-function mariaBatch(query, ...params) {
+function mariaBatch(query, callback, ...params) {
   // 첫 호출때는 this에 아무것도 없기 때문에 undefined가 나옵니다.
   // 파라미터가 3개 이상인 경우 batch모드로만 동작합니다.
-  if(this[sym] !== undefined) {
-    //  batch명령은 query와 함께 사용할 수 없으므로 this[sym]이 있음은 query 바인딩이 된 적이 있음을 의미합니다.
-    throw new Error('batch 명령은 query 명령과 함께 사용할 수 없다.');
+  if(this?._execute) {
+    throw new Error('query가 실행중이므로 새 query를 바인딩 할 수 없다.');
   }
-  return mariaBatch(query, params);
+  this._execute = true;
+  return mariaBatchExecute(query, callback, params);
 }
 
 function mariaQuery(query, param) {
+  if(this?._execute) {
+    throw new Error('query가 실행중이므로 새 query를 바인딩 할 수 없다.');
+  }
   if(query === undefined) {
     if(this[sym] === undefined) {
       throw new Error('query 바인딩 없이는 실행을 할 수 없다.');
     }
+    this._execute = true;
     return mariaExecute.bind(this)();
   }
   if(this[sym] === undefined) {
@@ -86,6 +129,14 @@ function mariaBind(mode) {
     return mariaQuery.bind({});
   } else if(mode === 'batch') {
     return mariaBatch.bind({});
+  } else if(mode === 'generator') {
+    const generator = mariaGenerator();
+    generator.next();
+    return {
+      async next(options) {
+        return await generator.next(options)?.value;
+      }
+    }
   } else {
     throw new Error('지원되지 않는 작업');
   }

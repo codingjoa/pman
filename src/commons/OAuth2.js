@@ -6,7 +6,6 @@ function useQuery() {
   return new URLSearchParams(ReactRouter.useLocation().search);
 }
 function authorization(code, setToken) {
-  console.log(code);
   axios(`/api/v1/oauth/kakao?code=${code}`, null, {
     withCredentials: true
   })
