@@ -9,7 +9,7 @@ module.exports = {
       throw new UnauthorizationError();
     }
     const query = maria('query');
-    query('select team.teamProfileName, count(teamMember.userID=?)>0 as isJoined from team left join teamMember on team.teamID=teamMember.teamID where team.teamID=?', [
+    query('select team.teamProfileName, user.userProfileName as teamOwnerUserName, case user.userProfileImg is null when 1 then user.userProfileImgDefault else user.userProfileImg end as teamOwnerUserImg, count(teamMember.userID=?)>0 as isJoined from team left join teamMember on team.teamID=teamMember.teamID left join user on team.teamOwnerUserID=user.userID where team.teamID=?', [
       userID, teamID
     ])(result => {
       // count를 사용한 쿼리인 탓에 무조건 rows가 나옵니다.
@@ -18,9 +18,11 @@ module.exports = {
         throw new UnauthorizationError('권한 없음.');
       }
       return {
+        teamOwnerUserName: result.rows[0].teamOwnerUserName,
+        teamOwnerUserImg: result.rows[0].teamOwnerUserImg,
         teamProfileName: result.rows[0].teamProfileName
       }
-    })('select teamMember.userID, user.userProfileName, user.userProfileImg, user.userProfileImgDefault from team left join teamMember on team.teamID=teamMember.teamID left join user on teamMember.userID=user.userID where team.teamID=?', [
+    })('select teamMember.userID, user.userProfileName, case user.userProfileImg is null when 1 then user.userProfileImgDefault else user.userProfileImg end as userProfileImg from team left join teamMember on team.teamID=teamMember.teamID left join user on teamMember.userID=user.userID where team.teamID=?', [
       teamID
     ])((result, storage) => {
       res.json({

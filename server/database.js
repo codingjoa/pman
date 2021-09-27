@@ -70,7 +70,7 @@ async function mariaExecute() {
         //resultSet = [];
         //resultSetIndex = 0;
       } else {
-        const result = await conn.query(query, param);
+        const result = await conn.query(query, (param instanceof Function ? param(storage) : param));
         resultSet[resultSetIndex++] = result;
         queryResult = {
           rows: Array.from(result),

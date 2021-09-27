@@ -2,6 +2,9 @@ import React from 'react'
 import * as ReactRouter from 'react-router-dom'
 import * as AccessToken from './AccessToken'
 import App from './App'
+import Invite from './Invite'
+import Team from './User/Team'
+import TeamDetail from './User/Team.detail'
 import User from './User'
 
 export default function PageRouter() {
@@ -19,8 +22,17 @@ export default function PageRouter() {
           <ReactRouter.Route exact path="/app">
             <App />
           </ReactRouter.Route>
+          <ReactRouter.Route exact path="/invite">
+            <Invite />
+          </ReactRouter.Route>
           <ReactRouter.Route exact path="/user">
             <User />
+          </ReactRouter.Route>
+          <ReactRouter.Route exact path="/team">
+            <Team />
+          </ReactRouter.Route>
+          <ReactRouter.Route exact path="/team/:teamID">
+            <TeamDetail />
           </ReactRouter.Route>
           <ReactRouter.Route path="*">
             404 Not Found

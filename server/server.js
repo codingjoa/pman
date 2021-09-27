@@ -3,6 +3,7 @@ const app = express();
 const env = require('./environment');
 
 require('./init')(app);
+require('./init.upload')(app);
 env.PROXY && require('./init.proxy')(app);
 //env.MARIADB && require('./init.mariadb')(app);
 //env.SQLITE && require('./init.sqlite')(app);

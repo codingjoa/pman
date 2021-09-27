@@ -12,33 +12,10 @@ team('/', require('./endpoint/team'));
 team('/invite', require('./endpoint/team.invite'));
 team('/:teamID', require('./endpoint/team.detail'));
 team('/:teamID/schedule', require('./endpoint/team.detail.schedule'));
+team('/:teamID/schedule/:scheduleID', require('./endpoint/team.detail.schedule.detail'));
+team('/:teamID/schedule/:scheduleID/:scheduleReferenceID', require('./endpoint/team.detail.schedule.detail.reference.detail'));
 team('/:teamID/user/:userID', require('./endpoint/team.detail.user'));
-
-api('/test')('/:p1/:p2/:p3/:p4', {
-  Read(req, res) {
-    const { p1, p2, p3, p4 } = req.params;
-    if(p4 === 'error') {
-      const {NotFoundError} = require('./server/Types/Error');
-      throw new NotFoundError('자료를 찾을 수 없습니다.');
-      throw new Error('고의적인 오류 발생');
-    } else {
-      res.json({ p1, p2, p3, p4, message: '어 퇴사기원' });
-    }
-  }
-});
-/*
-api('/token', {
-  Read(req, res) {
-    res.json({ user: req.user });
-    console.log(req.user);
-  }
-});
-*/
-
-('/:fn', {
-  Read(req, res) {
-
-  }
-});
+const test = api('/test');
+test('/upload', require('./endpoint/file.service'));
 
 app.listen(5000);
