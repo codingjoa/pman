@@ -70,7 +70,13 @@ async function mariaExecute() {
         //resultSet = [];
         //resultSetIndex = 0;
       } else {
-        const result = await conn.query(query, (param instanceof Function ? param(storage) : param));
+        const parameter = (param instanceof Function ? param(storage) : param);
+        const usePlaceHolder = (parameter instanceof Array || parameter === undefined);
+        const queryType = usePlaceHolder ? query : {
+          namedPlaceholders: true,
+          sql: query
+        };
+        const result = await conn.query(queryType, parameter);
         resultSet[resultSetIndex++] = result;
         queryResult = {
           rows: Array.from(result),
@@ -114,10 +120,7 @@ function mariaQuery(query, param) {
     this[sym] = new Set();
   }
   this[sym].add({
-    query: (param instanceof Array || param === undefined) ? query : {
-      namedPlaceholders: true,
-      sql: query
-    },
+    query,
     param,
     callback: (query instanceof Function && query)
   });

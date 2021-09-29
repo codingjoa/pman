@@ -1,7 +1,9 @@
 const axios = require('axios');
 const accessToken = process.env.ACCESS_TOKEN;
 const url = process.env.URI;
-axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+if(accessToken) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+}
 
 async function Main() {
   let body = '';
