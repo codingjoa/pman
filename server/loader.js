@@ -19,38 +19,38 @@ function Header(CRUD) {
 }
 
 function loader(path, CRUD) {
-  // 이 함수에 바인딩된 this.init()의 반환값을 가져옵니다.
-  parentRouter = this.init();
-  // { Create(), Read(), Update(), Delete() }
+  if(!this?.parentRouter) {
+    this.parentRouter = this.getNewRouter();
+  }
+  if(this.duplicate.has(path)) {
+    throw new Error('Conflict path');
+  }
+  this.duplicate.add(path);
+  const parentRouter = this.parentRouter;
   CRUD?.Create && parentRouter.post(path, CRUD.Create);
   CRUD?.Read && parentRouter.get(path, CRUD.Read);
   CRUD?.Update && parentRouter.put(path, CRUD.Update);
   CRUD?.Delete && parentRouter.delete(path, CRUD.Delete);
   CRUD?.Patch && parentRouter.patch(path, CRUD.Patch);
   parentRouter.head(path, (req, res) => res.set('Allow', Header(CRUD).toString()))
-  // loader(app)('/api', CRUDObject) 형태를 위해 클로저를 사용한 함수 init을 포함한 객체를 this로 바인딩합니다.
+  // path가 바뀔때마다 바인딩되는 오브젝트도 새로 만들어지기 때문에 라우터도 새로 만들어진다.
   const loaderChild = loader.bind({
-    router: null,
-    init() {
-      if(this.router !== null) {
-        // router가 중복으로 use되는 것을 방지하기 위해 기존 라우터 재사용
-        return this.router;
-      }
-      const parentPath = path;
-      const router = express.Router();
-      this.router = router;
-      parentRouter.use(parentPath, router);
-      return router;
+    parentRouter: null,
+    duplicate: new Set(),
+    getNewRouter() {
+      const childRouter = express.Router();
+      parentRouter.use(path, childRouter);
+      return childRouter; // this.parentRouter = childRouter;
     }
-  })
+  });
   return loaderChild;
 }
+
 function loaderRoot(app) {
   const loaderChild = loader.bind({
-    init() {
-      // 첫 바인딩은 express의 app을 그대로 반환합니다.
-      return app;
-    }
+    // 첫 바인딩은 express의 app을 그대로 반환합니다.
+    parentRouter: app,
+    duplicate: new Set()
   });
   // 최상위 loader는 유일하게 listen을 수행할 수 있습니다.
   // main 입장에서는 app에 직접 접근이 차단됩니다.
