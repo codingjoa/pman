@@ -1,2 +1,0 @@
-#!/bin/bash
-curl -H "Authorization: Bearer $ACCESS_TOKEN" -X DELETE $URI | json && echo
