@@ -24,4 +24,3 @@ yarn-error.log*
 
 /static
 /secret
-package-lock.json

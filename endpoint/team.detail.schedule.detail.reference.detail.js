@@ -1,5 +1,5 @@
-const maria = require('../server/database');
-const { UnauthorizationError } = require('../server/Types/Error');
+const maria = require('../loadModules').maria;
+const { UnauthorizationError } = require('../loadModules').Error;
 
 module.exports = {
   Patch(req, res, next) {

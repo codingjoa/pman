@@ -1,6 +1,6 @@
 const { createTokens } = require('./oauth');
-const { validateJWT } = require('../server/jwt');
-const { UnauthorizationError } = require('../server/Types/Error');
+const { validateJWT } = require('./jwt');
+const { UnauthorizationError } = require('../loadModules').Error;
 
 module.exports = {
   Read(req, res) {

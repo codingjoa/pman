@@ -1,7 +1,6 @@
-const app = require('./server/server');
+const app = require('./loadModules').app;
 const api = app('/api/v1');
 
-const account = api('/account', require('./endpoint/account'));
 const oauth = api('/oauth');
 oauth('/kakao', require('./endpoint/oauth.kakao'));
 oauth('/refresh', require('./endpoint/oauth.refresh'));

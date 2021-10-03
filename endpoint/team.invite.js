@@ -1,8 +1,8 @@
-const maria = require('../server/database');
-const env = require('../server/environment');
+const maria = require('../loadModules').maria;
+const env = require('../loadModules').env;
 const jwt = require('jsonwebtoken');
 const iss = 'development';
-const { NotFoundError, UnauthorizationError } = require('../server/Types/Error');
+const { NotFoundError, UnauthorizationError } = require('../loadModules').Error;
 
 function createInviteToken(teamID, teamInviteCount) {
   //team.teamInviteCount

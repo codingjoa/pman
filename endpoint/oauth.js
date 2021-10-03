@@ -3,11 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const mkdirp = require('mkdirp');
 const Identicon = require('identicon.js');
-const maria = require('../server/database');
-// const { maria } = require('../server/database');
-const env = require('../server/environment');
-const { UnauthorizationError } = require('../server/Types/Error');
-const { createJWT } = require('../server/jwt');
+const maria = require('../loadModules').maria;
+const env = require('../loadModules').env;
+const { UnauthorizationError } = require('../loadModules').Error;
+const { createJWT } = require('./jwt');
 
 const kakao = {
   apiKey: env.APIKEY_KAKAO,

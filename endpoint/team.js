@@ -1,5 +1,5 @@
-const maria = require('../server/database');
-const { NotFoundError, UnauthorizationError } = require('../server/Types/Error');
+const maria = require('../loadModules').maria;
+const { NotFoundError, UnauthorizationError } = require('../loadModules').Error;
 
 module.exports = {
   Read(req, res, next) {

@@ -25,7 +25,8 @@ module.exports = {
       'PROXY': true,
       'APIKEY_KAKAO': './secret/key.kakao.js',
       'MARIADB_NAME': 'pman',
-      'FRONT_DOMAIN': 'https://txshi.iptime.org'
+      'FRONT_DOMAIN': 'https://txshi.iptime.org',
+      'JEKO_HOME': `${process.env.HOME}/jeko`
     },
     env_dev: {
       'DEBUG': '1',
