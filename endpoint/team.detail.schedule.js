@@ -6,28 +6,35 @@ async function createSchedule(req, res) {
   if(!userID) {
     throw new UnauthorizationError();
   }
-  const teamID = req.params?.teamID;
+  const teamID = req.params?.teamID - 0;
   const schedulePublishAt = req.body?.schedulePublishAt;
   const scheduleExpiryAt = req.body?.scheduleExpiryAt;
   const scheduleContent = req.body?.scheduleContent;
   const scheduleName = req.body?.scheduleName;
   const scheduleTag = req.body?.scheduleTag ?? 0;
-  if(teamID===undefined || schedulePublishAt===undefined || scheduleExpiryAt===undefined || scheduleContent===null || scheduleName===null) {
+  if(teamID===NaN || schedulePublishAt===undefined || scheduleExpiryAt===undefined || scheduleContent===null || scheduleName===null) {
     throw new Error('param err');
   }
 
   const query = maria('query');
-  query('select team.teamProfileName, count(teamMember.userID=?)>0 as isJoined from team left join teamMember on team.teamID=teamMember.teamID where team.teamID=?', [
-    userID, teamID
+  query('select team.teamOwnerUserID=? as isTeamOwn, teamMember.teamPermission from team left join teamMember on team.teamID=teamMember.teamID where teamMember.userID=? and teamMember.teamID=?', [
+    userID, userID, teamID
   ])(result => {
-    if(!result.rows[0].isJoined) {
-      throw new UnauthorizationError('권한 없음.')
+    if(!result.rows.length) {
+      throw new Error('403 권한 없음.');
     }
+    if(result.rows?.[0]?.isTeamOwn) {
+      return;
+    }
+    if(result.rows?.[0]?.teamPermission & permissions.SCHEDULE_WRITABLE) {
+      return;
+    }
+    throw new Error('403 권한 없음.');
   })('insert into teamSchedule(scheduleOwnerUserID, scheduleName, schedulePublishAt, scheduleExpiryAt, scheduleContent, scheduleTag, teamID) values (?, ?, ?, ?, ?, ?, ?)', [
     userID, scheduleName, schedulePublishAt, scheduleExpiryAt, scheduleContent, scheduleTag, teamID
   ])(result => {
     if(!result.affectedRows) {
-      throw new UnauthorizationError('권한 없음.');
+      throw new Error('403 권한 없음');
     }
     const scheduleID = result.lastID;
     res.status(201);
@@ -49,18 +56,19 @@ module.exports = {
     if(!userID) {
       throw new UnauthorizationError();
     }
-    const teamID = req.params?.teamID ?? null;
+    const teamID = req.params?.teamID - 0;
     const date = req.query?.date ?? null;
-    const start = req.query?.start ?? null;
-    const limit = req.query?.limit ?? null;
-    if(teamID===null || start===null || limit===null) {
+    const start = req.query?.start - 0;
+    const limit = req.query?.limit - 0;
+    if(teamID===NaN || start===NaN || limit===NaN) {
       new Error('param Err');
     }
     const query = maria('query');
-    query('select team.teamProfileName, count(teamMember.userID=?)>0 as isJoined from team left join teamMember on team.teamID=teamMember.teamID where team.teamID=?', [
+
+    query('select team.teamProfileName, count(teamMember.userID=?)>0 as isTeamMember from team left join teamMember on team.teamID=teamMember.teamID where team.teamID=?', [
       userID, teamID
     ])(result => {
-      if(!result.rows[0].isJoined) {
+      if(!result.rows[0].isTeamMember) {
         throw new UnauthorizationError('권한 없음.')
       }
     })('select count(*) as sizeAll from teamSchedule where teamSchedule.teamID=?', [

@@ -12,6 +12,7 @@ team('/invite', require('./endpoint/team.invite'));
 team('/:teamID', require('./endpoint/team.detail'));
 team('/:teamID/schedule', require('./endpoint/team.detail.schedule'));
 team('/:teamID/schedule/:scheduleID', require('./endpoint/team.detail.schedule.detail'));
+team('/:teamID/schedule/:scheduleID/file', require('./endpoint/team.detail.schedule.detail.file'));
 team('/:teamID/schedule/:scheduleID/:scheduleReferenceID', require('./endpoint/team.detail.schedule.detail.reference.detail'));
 team('/:teamID/user/:userID', require('./endpoint/team.detail.user'));
 const test = api('/test');

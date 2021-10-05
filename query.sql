@@ -44,13 +44,16 @@ create table if not exists pman.teamSchedule (
   scheduleContent LONGTEXT not null default '',
   teamID int unsigned not null,
   foreign key (teamID, scheduleOwnerUserID) references teamMember(teamID, userID) on delete cascade on update cascade,
-  primary key (scheduleID)
+  primary key (scheduleID, teamID)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 create table if not exists pman.teamScheduleFile (
   scheduleFile varchar(2083) not null,
+  scheduleFileName varchar(2083) not null,
+  scheduleFileThumbnail BLOB null,
   scheduleID int unsigned not null,
-  foreign key (scheduleID) references teamSchedule(scheduleID) on delete cascade on update cascade
+  teamID int unsigned not null,
+  foreign key (scheduleID, teamID) references teamSchedule(scheduleID, teamID) on delete cascade on update cascade
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 create table if not exists pman.teamScheduleReference (
@@ -61,15 +64,17 @@ create table if not exists pman.teamScheduleReference (
   scheduleID int unsigned not null,
   teamID int unsigned not null,
   userID int unsigned not null,
-  foreign key (scheduleID) references teamSchedule(scheduleID) on delete cascade on update cascade,
+  foreign key (scheduleID, teamID) references teamSchedule(scheduleID, teamID) on delete cascade on update cascade,
   foreign key (teamID, userID) references teamMember(teamID, userID) on delete cascade on update cascade,
-  primary key (scheduleReferenceID)
+  primary key (scheduleReferenceID, scheduleID, teamID)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 create table if not exists pman.teamScheduleReferenceFile (
   scheduleReferenceFile varchar(2083) not null,
   scheduleReferenceID int unsigned not null,
-  foreign key (scheduleReferenceID) references teamScheduleReference(scheduleReferenceID) on delete cascade on update cascade
+  scheduleID int unsigned not null,
+  teamID int unsigned not null,
+  foreign key (scheduleReferenceID, scheduleID, teamID) references teamScheduleReference(scheduleReferenceID, scheduleID, teamID) on delete cascade on update cascade
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 

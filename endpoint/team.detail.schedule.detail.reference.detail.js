@@ -15,17 +15,14 @@ module.exports = {
     const scheduleReferenceTag = req.body?.scheduleReferenceTag;
     const scheduleReferenceContent = req.body?.scheduleReferenceContent;
     if(teamID===null || scheduleID===null || scheduleReferenceID===null) {
-      new Error('param Err');
+      new Error('400 파라미터 오류');
     }
     const query = maria('query');
-    query('select teamScheduleReference.userID=? as isOwn from teamScheduleReference where teamScheduleReference.teamID=? and teamScheduleReference.scheduleID=? and teamScheduleReference.scheduleReferenceID=?', [
+    query('select teamScheduleReference.userID=? as isReferenceOwn from teamScheduleReference where teamScheduleReference.teamID=? and teamScheduleReference.scheduleID=? and teamScheduleReference.scheduleReferenceID=?', [
       userID, teamID, scheduleID, scheduleReferenceID
     ])(result => {
-      if(!result.rows.length) {
-        throw new UnauthorizationError('권한 없음.');
-      }
-      if(!result.rows[0].isOwn) {
-        throw new UnauthorizationError('권한 없음.');
+      if(!result.rows?.[0]?.isReferenceOwn) {
+        throw new Error('403 권한 없음');
       }
     });
     if(scheduleReferenceTag !== undefined) {
@@ -66,14 +63,14 @@ module.exports = {
     const scheduleID = req.params?.scheduleID ?? null;
     const scheduleReferenceID = req.params?.scheduleReferenceID ?? null;
     if(teamID===null || scheduleID===null || scheduleReferenceID===null) {
-      new Error('param Err');
+      new Error('400 파라미터 오류');
     }
     const query = maria('query');
     query('select team.teamProfileName, count(teamMember.userID=?)>0 as isJoined from team left join teamMember on team.teamID=teamMember.teamID where team.teamID=?', [
       userID, teamID
     ])(result => {
-      if(!result.rows[0].isJoined) {
-        throw new UnauthorizationError('권한 없음.')
+      if(!result.rows[0].isTeamMember) {
+        throw new Error('403 권한 없음.');
       }
     })('select teamScheduleReferenceFile.scheduleReferenceFile from teamScheduleReferenceFile where teamScheduleReferenceFile.scheduleReferenceID=?', [
       scheduleReferenceID
@@ -85,7 +82,7 @@ module.exports = {
       scheduleReferenceID, teamID, scheduleID
     ])((result, storage) => {
       if(!result.rows.length) {
-        throw new UnauthorizationError('권한 없음.')
+        throw new Error('403 권한 없음.');
       }
       res.json({
         ...result.rows[0],

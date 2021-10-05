@@ -2,7 +2,8 @@ const maria = require('../loadModules').maria;
 const env = require('../loadModules').env;
 const jwt = require('jsonwebtoken');
 const iss = 'development';
-const { NotFoundError, UnauthorizationError } = require('../loadModules').Error;
+const { UnauthorizationError } = require('../loadModules').Error;
+const permissions = require('./permissions');
 
 function createInviteToken(teamID, teamInviteCount) {
   //team.teamInviteCount
@@ -43,13 +44,13 @@ module.exports = {
       userID, teamID
     ])(result => {
       if(!result.rows[0].teamInviteCount === null ) {
-        throw new NotFoundError('존재하지 않는 팀입니다.');
+        throw new Error('403 권한 없음');
       }
       if(teamInviteCount !== result.rows[0].teamInviteCount) {
-        throw new Error('old token');
+        throw new Error('403 old token');
       }
       if(result.rows[0].isJoined) {
-        throw new Error('이미 팀에 소속되어 있음.');
+        throw new Error('400 이미 팀에 소속되어 있음.');
       }
     })('insert into teamMember (userID, teamID) values (?, ?)', [
       userID, teamID
@@ -72,11 +73,24 @@ module.exports = {
       throw new Error('param err');
     }
     const query = maria('query');
-    query('select team.teamInviteCount from team where team.teamID=?', [
+    query('select team.teamOwnerUserID=? as isTeamOwn, teamMember.teamPermission from team left join teamMember on team.teamID=teamMember.teamID where teamMember.userID=? and teamMember.teamID=?', [
+      userID, userID, teamID
+    ])(result => {
+      if(!result.rows.length) {
+        throw new Error('403 권한 없음.');
+      }
+      if(result.rows?.[0]?.isTeamOwn) {
+        return;
+      }
+      if(result.rows?.[0]?.teamPermission & permissions.INVITE_MANAGEMENT) {
+        return;
+      }
+      throw new Error('403 권한 없음.');
+    })('select team.teamInviteCount from team where team.teamID=?', [
       teamID
     ])(result => {
       if(!result.rows.length) {
-        throw new NotFoundError('존재하지 않는 팀입니다.');
+        throw new Error('403 권한 없음.');
       }
       return {
         teamInviteCount: result.rows[0].teamInviteCount
