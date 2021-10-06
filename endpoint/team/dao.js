@@ -7,18 +7,64 @@ class TeamDAO extends DAO {
     this.teamProfileName = req.body?.teamProfileName;
     this.teamProfileDescription = req.body?.teamProfileDescription;
   }
-/*
-  isTeamMember() {
 
-    this.query('')
+  isTeamMember() {
+    this.query(
+`select
+  team.teamProfileName,
+  count(teamMember.userID=?)>0 as isTeamMember
+from
+  team left join teamMember on
+    team.teamID=teamMember.teamID
+where
+  team.teamID=?`, [
+      this.requestUserID, this.teamID
+    ])(result => {
+      const p = result.rows?.[0];
+      return {
+        isTeamMember: p?.isTeamMember
+      };
+    });
+  }
+
+  isTeamPermissions() {
+    this.query(
+`select
+  team.teamOwnerUserID=? as isTeamOwner,
+  teamMember.teamPermission
+from
+  team left join
+  teamMember on
+    team.teamID=teamMember.teamID
+where
+  teamMember.userID=? and
+  teamMember.teamID=?`, [
+      this.requestUserID, this.requestUserID, this.teamID
+    ])(result => {
+      const p = result.rows?.[0];
+      return {
+        isTeamOwner: p?.isTeamOwner,
+        isTeamPermissions: p?.isTeamMember
+      };
+    });
+  }
+
+  checkReadPermissions() {
+    this.isTeamMember();
+    this.query((result, storage) => {
+      if(!storage.isTeamMember) {
+        throw new Error('403 권한 없음');
+      }
+    });
     return this;
   }
-*/
-  async createTeam(res) {
-    if(!this.teamProfileName || !this.teamProfileDescription) {
-      throw new Error('401 파라미터 오류');
-    }
 
+  async create(res) {
+    // 토큰 권한 확인
+    this.isAuthorized();
+
+    // 본 작업
+    this.checkParameters(this.teamProfileName, this.teamProfileDescription);
     return this.query('insert into team(teamOwnerUserID, teamProfileName, teamProfileDescription) values (?, ?, ?)', [
       this.requestUserID, this.teamProfileName, this.teamProfileDescription
     ])(result => {
@@ -36,7 +82,11 @@ class TeamDAO extends DAO {
     })();
   }
 
-  async getTeams(res) {
+  async read(res) {
+    // 토큰 권한 확인
+    this.isAuthorized();
+
+    // 본 작업
     return this.query(
 `select
   team.teamID,
