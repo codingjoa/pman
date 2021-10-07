@@ -82,14 +82,14 @@ class TeamScheduleDetailDAO extends TeamScheduleDAO {
     }
     if(this.addRefUsers.length) {
       for(const refUserID of this.addRefUsers) {
-        this.query('select count(teamScheduleReference.userID=?)>0 as isRegCode from teamScheduleReference where teamScheduleReference.teamID=? and teamScheduleReference.scheduleID=?', [
+        this.query('select count(teamScheduleWhitelist.userID=?)>0 as isRegCode from teamScheduleWhitelist where teamScheduleWhitelist.teamID=? and teamScheduleWhitelist.scheduleID=?', [
           refUserID, this.teamID, this.scheduleID
         ])(result => {
           if(result.rows[0].isRegCode) {
             throw new Error();
           }
-        })('insert into teamScheduleReference(scheduleID, userID, teamID) values (?, ?, ?)', [
-          this.scheduleID, refUserID, this.teamID
+        })('insert into teamScheduleWhitelist(teamID, scheduleID, userID) values (?, ?, ?)', [
+          this.teamID, this.scheduleID, refUserID
         ])(result => {
           if(!result.affectedRows) {
             throw new new Error();
@@ -99,7 +99,7 @@ class TeamScheduleDetailDAO extends TeamScheduleDAO {
     }
     if(this.deleteRefUsers.length) {
       for(const refUserID of this.deleteRefUsers) {
-        this.query('delete from teamScheduleReference where teamScheduleReference.scheduleID=? and teamScheduleReference.userID=? and teamScheduleReference.teamID=?', [
+        this.query('delete from teamScheduleWhitelist where teamScheduleReference.scheduleID=? and teamScheduleReference.userID=? and teamScheduleReference.teamID=?', [
           this.scheduleID, refUserID, this.teamID
         ])(result => {
           if(!result.affectedRows) {
@@ -123,19 +123,33 @@ class TeamScheduleDetailDAO extends TeamScheduleDAO {
     this.checkReadPermissions();
 
     this.checkParameters(this.teamID, this.scheduleID);
-    return this.query('select teamScheduleReference.scheduleReferenceID, teamScheduleReference.userID, user.userProfileName, case user.userProfileImg is null when 1 then user.userProfileImgDefault else user.userProfileImg end as userProfileImg, teamScheduleReference.scheduleReferencePublishAt, teamScheduleReference.scheduleReferenceTag, CHAR_LENGTH(teamScheduleReference.scheduleReferenceContent) as scheduleReferenceContentSize from teamScheduleReference left join user on teamScheduleReference.userID=user.userID where teamScheduleReference.teamID=? and teamScheduleReference.scheduleID=?', [
+    //CHAR_LENGTH(teamScheduleReference.scheduleReferenceContent) as scheduleReferenceContentSize
+    return this.query('select teamScheduleWhitelist.userID, user.userProfileName, case user.userProfileImg is null when 1 then user.userProfileImgDefault else user.userProfileImg end as userProfileImg from teamScheduleWhitelist left join user on teamScheduleWhitelist.userID=user.userID where teamScheduleWhitelist.teamID=? and teamScheduleWhitelist.scheduleID=?', [
       this.teamID, this.scheduleID
     ])(result => {
       return {
-        scheduleReferences: result.rows
+        users: result.rows
       };
-    })('select teamScheduleFile.scheduleFile from teamScheduleFile where teamScheduleFile.scheduleID=?', [
-      this.scheduleID
-    ])(result => {
-      return {
-        scheduleFiles: result.rows
-      };
-    })('select teamSchedule.scheduleName, user.userProfileName as scheduleOwnerUserName, teamSchedule.schedulePublishAt, teamSchedule.scheduleExpiryAt, teamSchedule.scheduleReversion, teamSchedule.scheduleTag, teamSchedule.scheduleContent from teamSchedule left join user on teamSchedule.scheduleOwnerUserID=user.userID where teamSchedule.teamID=? and teamSchedule.scheduleID=? ', [
+    })(
+`select
+  teamSchedule.scheduleName,
+  user.userProfileName as scheduleOwnerUserName,
+  teamSchedule.schedulePublishAt,
+  teamSchedule.scheduleExpiryAt,
+  teamSchedule.scheduleReversion,
+  teamSchedule.scheduleType,
+  teamSchedule.scheduleContent,
+  teamFiles.fileUUID,
+  teamFiles.fileName
+from
+  teamSchedule left join
+  user on
+    teamSchedule.userID=user.userID left join
+  teamFiles on
+    teamSchedule.fileUUID=teamFiles.fileUUID
+where
+  teamSchedule.teamID=? and
+  teamSchedule.scheduleID=?`, [
       this.teamID, this.scheduleID
     ])((result, storage) => {
       if(!result.rows.length) {
@@ -143,8 +157,7 @@ class TeamScheduleDetailDAO extends TeamScheduleDAO {
       }
       res.json({
         ...result.rows[0],
-        scheduleReferences: storage.scheduleReferences,
-        scheduleFiles: storage.scheduleFiles,
+        users: storage.users,
         teamID: this.teamID,
         scheduleID: this.scheduleID
       });

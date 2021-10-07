@@ -55,13 +55,12 @@ module.exports = {
     })().catch(err => next(err));
   },
   Read(req, res, next) {
-    const userID = req.user?.id;
-    if(!userID) {
-      throw new UnauthorizationError();
-    }
+    this.isAuthorized();
+
+    this.scheduleReferenceID = req.params?.scheduleReferenceID ?? null;
+
     const teamID = req.params?.teamID ?? null;
     const scheduleID = req.params?.scheduleID ?? null;
-    const scheduleReferenceID = req.params?.scheduleReferenceID ?? null;
     if(teamID===null || scheduleID===null || scheduleReferenceID===null) {
       new Error('400 파라미터 오류');
     }

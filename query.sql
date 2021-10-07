@@ -78,6 +78,75 @@ create table if not exists pman.teamScheduleReferenceFile (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 
+
+
+create table if not exists pman.teamFiles (
+  fileUUID char(36) not null,
+  fileName varchar(2083) not null,
+  fileExtname varchar(255) null,
+  fileThumbnail BLOB null,
+  primary key (fileUUID)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+create table if not exists pman.teamSchedule (
+  teamID int unsigned not null,
+  scheduleID int unsigned not null AUTO_INCREMENT,
+  scheduleName varchar(255) not null,
+  scheduleModifyAt timestamp not null default current_timestamp on update current_timestamp,
+  schedulePublishAt timestamp not null,
+  scheduleExpiryAt timestamp not null,
+  scheduleReversion int unsigned not null default 0,
+  scheduleContent LONGTEXT not null default '',
+  scheduleType int unsigned not null default 0,
+  fileUUID char(36) null,
+  userID int unsigned not null,
+  foreign key (teamID, userID) references teamMember(teamID, userID) on delete cascade on update cascade,
+  foreign key (fileUUID) references teamFiles(fileUUID) on delete set null on update cascade,
+  primary key (scheduleID, teamID)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+create table if not exists pman.teamScheduleWhitelist (
+  teamID int unsigned not null,
+  scheduleID int unsigned not null,
+  userID int unsigned not null,
+  foreign key (scheduleID, teamID) references teamSchedule(scheduleID, teamID) on delete cascade on update cascade,
+  foreign key (teamID, userID) references teamMember(teamID, userID) on delete cascade on update cascade,
+  unique (teamID, scheduleID, userID)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+create table if not exists pman.teamScheduleSubmit (
+  teamID int unsigned not null,
+  scheduleID int unsigned not null,
+  userID int unsigned not null,
+  submitID int unsigned not null AUTO_INCREMENT,
+  submitPublishAt timestamp not null default current_timestamp,
+  submitModifiedAt timestamp not null default current_timestamp on update current_timestamp,
+  submitContent LONGTEXT not null,
+  fileUUID char(36) null,
+  foreign key (teamID, scheduleID, userID) references teamScheduleWhitelist(teamID, scheduleID, userID) on delete cascade on update cascade,
+  foreign key (fileUUID) references teamFiles(fileUUID) on delete set null on update cascade,
+  unique (teamID, scheduleID, userID),
+  primary key(submitID)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+create table if not exists pman.teamScheduleComment (
+  teamID int unsigned not null,
+  scheduleID int unsigned not null,
+  userID int unsigned not null,
+  commentID int unsigned not null AUTO_INCREMENT,
+  commentCreatedAt timestamp not null default current_timestamp,
+  commentModifiedAt timestamp not null default current_timestamp on update current_timestamp,
+  commentContent LONGTEXT not null,
+  foreign key (teamID, scheduleID, userID) references teamScheduleWhitelist(teamID, scheduleID, userID) on delete cascade on update cascade,
+  unique (teamID, scheduleID, userID),
+  primary key(commentID)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+
+
+
+
+
 --- query test
 
 insert into user(

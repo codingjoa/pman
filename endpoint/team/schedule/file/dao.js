@@ -3,7 +3,16 @@ const TeamScheduleDAO = require('../dao');
 const fs = require('fs');
 const path = require('path');
 const ROOT = process.cwd();
+const uuidv4 = require('uuid').v4;
 const multer = require('multer');
+const diskStorage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'static/file/');
+  },
+  filename(req, file, cb) {
+    cb(null, uuidv4());
+  }
+});
 const upload = multer({
   dest: 'static/file/',
   limits: {
@@ -12,12 +21,28 @@ const upload = multer({
     fileSize: '10MB'
   }
 });
-const uploadFile = upload.single('file');
+const uploadFileExecute = upload.single('file');
 
 class TeamScheduleFileDAO extends TeamScheduleDAO {
   constructor(req) {
     super(req);
     this.req = req;
+  }
+
+  async uploadFile(res) {
+    return new Promise((resolve, reject) => {
+      uploadFileExecute(this.req, res, err => {
+        if(err) {
+          reject(err);
+          return;
+        }
+        resolve({
+          fileName: this.req?.file?.originalname,
+          file: this.req?.file?.filename,
+          path: this.req?.file?.path
+        });
+      });
+    });
   }
 
   async delete(res) {
@@ -26,20 +51,30 @@ class TeamScheduleFileDAO extends TeamScheduleDAO {
     this.checkDeletePermissions();
 
     this.checkParameters(this.scheduleID, this.teamID);
-    return this.query('select teamScheduleFile.scheduleFile from teamSchedule left join teamScheduleFile on teamSchedule.scheduleID=teamScheduleFile.scheduleID where teamSchedule.scheduleID=? and teamSchedule.teamID=?', [
+    return this.query(
+`select
+  teamFiles.fileUUID
+from
+  teamSchedule left join
+  teamFiles on
+    teamSchedule.fileUUID=teamFiles.fileUUID
+where
+  teamSchedule.scheduleID=? and
+  teamSchedule.teamID=?`, [
       this.scheduleID, this.teamID
     ])(result => {
       // 파일 유무 검사
       const p = result.rows?.[0];
-      if(p?.scheduleFile) {
-        fs.rmSync(path.join(ROOT, 'static/file', p.scheduleFile));
+      if(p?.fileUUID) {
+        fs.rmSync(path.join(ROOT, 'static/file', p.fileUUID));
       }
       res.json({
         complete: true
       });
-    })('delete from teamScheduleFile where scheduleID=? and teamID=?', [
-      this.scheduleID, this.teamID
-    ])();
+      return { fileUUID };
+    })('delete from teamFiles where fileUUID=?', storage => ([
+      storage.fileUUID
+    ]))();
   }
 
   async read(res) {
@@ -48,14 +83,24 @@ class TeamScheduleFileDAO extends TeamScheduleDAO {
     this.checkReadPermissions();
 
     this.checkParameters(this.scheduleID, this.teamID);
-    return this.query('select teamScheduleFile.scheduleFile, teamScheduleFile.scheduleFileName from teamScheduleFile where teamScheduleFile.teamID=? and teamScheduleFile.scheduleID=?', [
+    return this.query(
+`select
+  teamFiles.fileUUID,
+  teamFiles.fileName
+from
+  teamSchedule left join
+  teamFiles on
+    teamSchedule.fileUUID=teamFiles.fileUUID
+where
+  teamSchedule.teamID=? and
+  teamSchedule.scheduleID=?`, [
       this.teamID, this.scheduleID
     ])(result => {
       const p = result.rows?.[0];
-      if(!p?.scheduleFile) {
+      if(!p?.fileUUID) {
         throw new Error('404 파일 없음');
       }
-      res.download(path.join(ROOT, 'static/file', p.scheduleFile), p.scheduleFileName);
+      res.download(path.join(ROOT, 'static/file', p.fileUUID), p.fileName);
     })();
   }
 
@@ -65,33 +110,32 @@ class TeamScheduleFileDAO extends TeamScheduleDAO {
     this.checkUpdatePermissions();
 
     this.checkParameters(this.scheduleID, this.teamID);
-    return this.query('select teamScheduleFile.scheduleFile from teamSchedule left join teamScheduleFile on teamSchedule.scheduleID=teamScheduleFile.scheduleID where teamSchedule.scheduleID=? and teamSchedule.teamID=?', [
+    return this.query(
+`select
+  teamFiles.fileUUID
+from
+  teamSchedule left join
+  teamFiles on
+    teamSchedule.fileUUID=teamFiles.fileUUID
+where
+  teamSchedule.scheduleID=? and
+  teamSchedule.teamID=?`, [
       this.scheduleID, this.teamID
     ])(result => {
       // 파일 유무 검사
-      if(result.rows?.[0]?.scheduleFile) {
+      if(result.rows?.[0]?.fileUUID) {
         throw new Error('400 파일 존재함');
       }
       // TODO: 썸네일 제작 기능 추가해야 함
-      return new Promise((resolve, reject) => {
-        uploadFile(this.req, res, err => {
-          if(err) {
-            reject(err);
-            return;
-          }
-          resolve({
-            fileName: this.req?.file?.originalname,
-            file: this.req?.file?.filename,
-            path: this.req?.file?.path
-          });
-        });
-      });
+      return this.uploadFile(res);
     })((result, storage) => {
       if(!storage?.file) {
         throw new Error('400 파일 없음');
       }
-    })('insert into teamScheduleFile(scheduleFile,scheduleFileName, scheduleID, teamID) values(?, ?, ?, ?)', storage => ([
-      storage.file, storage.fileName, this.scheduleID, this.teamID
+    })('insert into teamFiles(fileUUID, fileName) values(?, ?)', storage => ([
+      storage.file, storage.fileName
+    ]))('update teamSchedule set teamSchedule.fileUUID=? where teamSchedule.teamID=? and teamSchedule.scheduleID=?', storage => ([
+      storage.file, this.teamID, this.scheduleID
     ]))((result, storage) => {
       if(!result.affectedRows) {
         fs.rmSync(storage.path);

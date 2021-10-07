@@ -7,23 +7,47 @@ class TeamScheduleDAO extends TeamDAO {
     this.scheduleID = req.params?.scheduleID - 0;
 
     this.date = req.query?.date ?? null;
-    this.start = req.query?.start - 0;
-    this.limit = req.query?.limit - 0;
+    const start = req.query?.start - 0;
+    const limit = req.query?.limit - 0;
+    this.start = !start ? 0 : start;
+    this.limit = !limit ? 30 : limit;
 
     this.schedulePublishAt = req.body?.schedulePublishAt;
     this.scheduleExpiryAt = req.body?.scheduleExpiryAt;
     this.scheduleContent = req.body?.scheduleContent;
     this.scheduleName = req.body?.scheduleName;
-    this.scheduleTag = req.body?.scheduleTag ?? 0;
+    this.scheduleType = req.body?.scheduleType ?? 0;
   }
 
   isScheduleOwner() {
-    this.query('select teamSchedule.scheduleOwnerUserID=? as isScheduleOwner from teamSchedule where teamSchedule.teamID=? and teamSchedule.scheduleID=?', [
+    this.query('select teamSchedule.userID=? as isScheduleOwner from teamSchedule where teamSchedule.teamID=? and teamSchedule.scheduleID=?', [
       this.requestUserID, this.teamID, this.scheduleID
     ])(result => {
       const p = result.rows?.[0];
       return {
         isScheduleOwner: p?.isScheduleOwner
+      };
+    });
+  }
+
+  isScheduleType() {
+    this.query('select teamSchedule.scheduleType as isScheduleType from teamSchedule where teamSchedule.teamID=? and teamSchedule.scheduleID=?', [
+      this.teamID, this.scheduleID
+    ])(result => {
+      const p = result.rows?.[0];
+      return {
+        isScheduleType: p?.isScheduleType ?? -1
+      };
+    });
+  }
+
+  isWhitelistMember() {
+    this.query('select count(teamScheduleWhitelist.userID=?)>0 as isWhitelistMember from teamScheduleWhitelist where teamScheduleWhitelist.teamID=? and teamScheduleWhitelist.scheduleID=?', [
+      this.requestUserID, this.teamID, this.scheduleID
+    ])(result => {
+      const p = result.rows?.[0];
+      return {
+        isWhitelistMember: p?.isWhitelistMember
       };
     });
   }
@@ -80,8 +104,25 @@ class TeamScheduleDAO extends TeamDAO {
       this.scheduleContent
     );
 
-    return this.query('insert into teamSchedule(scheduleOwnerUserID, scheduleName, schedulePublishAt, scheduleExpiryAt, scheduleContent, scheduleTag, teamID) values (?, ?, ?, ?, ?, ?, ?)', [
-      this.requestUserID, this.scheduleName, this.schedulePublishAt, this.scheduleExpiryAt, this.scheduleContent, this.scheduleTag, this.teamID
+    return this.query(
+`insert into teamSchedule(
+  teamID,
+  userID,
+  scheduleName,
+  schedulePublishAt,
+  scheduleExpiryAt,
+  scheduleContent,
+  scheduleType
+) values (
+  ?, ?, ?, ?, ?, ?, ?
+)`, [
+      this.teamID,
+      this.requestUserID,
+      this.scheduleName,
+      this.schedulePublishAt,
+      this.scheduleExpiryAt,
+      this.scheduleContent,
+      this.scheduleType
     ])(result => {
       if(!result.affectedRows) {
         throw new Error('403 권한 없음');
@@ -108,13 +149,31 @@ class TeamScheduleDAO extends TeamDAO {
       return {
         sizeAll: result.rows[0].sizeAll
       }
-    })('select teamSchedule.scheduleName, user.userProfileName as scheduleOwnerUserName, teamSchedule.schedulePublishAt, teamSchedule.scheduleExpiryAt, teamSchedule.scheduleReversion, teamSchedule.scheduleTag, teamSchedule.scheduleContent from teamSchedule left join user on teamSchedule.scheduleOwnerUserID=user.userID where teamSchedule.teamID=? limit ?, ?', [
+    })(
+`select
+  teamSchedule.scheduleName,
+  user.userProfileName as scheduleOwnerUserName,
+  teamSchedule.schedulePublishAt,
+  teamSchedule.scheduleExpiryAt,
+  teamSchedule.scheduleReversion,
+  teamSchedule.scheduleType,
+  teamSchedule.scheduleContent
+from
+  teamSchedule left join
+  user on
+    teamSchedule.userID=user.userID
+where
+  teamSchedule.teamID=?
+limit
+  ?, ?`, [
       this.teamID, this.start, this.limit
     ])((result, storage) => {
       res.json({
         fetchOption: {
           teamID: this.teamID,
-          date: this.date
+          date: this.date,
+          start: this.start,
+          limit: this.limit,
         },
         fetchResult: {
           sizeAll: storage.sizeAll,
