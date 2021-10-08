@@ -124,8 +124,24 @@ class TeamScheduleDetailDAO extends TeamScheduleDAO {
 
     this.checkParameters(this.teamID, this.scheduleID);
     //CHAR_LENGTH(teamScheduleReference.scheduleReferenceContent) as scheduleReferenceContentSize
-    return this.query('select teamScheduleWhitelist.userID, user.userProfileName, case user.userProfileImg is null when 1 then user.userProfileImgDefault else user.userProfileImg end as userProfileImg from teamScheduleWhitelist left join user on teamScheduleWhitelist.userID=user.userID where teamScheduleWhitelist.teamID=? and teamScheduleWhitelist.scheduleID=?', [
-      this.teamID, this.scheduleID
+    return this.query(
+`select
+  teamScheduleWhitelist.userID,
+  user.userProfileName,
+  case user.userProfileImg is null
+    when 1
+    then user.userProfileImgDefault
+    else user.userProfileImg
+  end as userProfileImg,
+  teamScheduleWhitelist.userID=? as me
+from
+  teamScheduleWhitelist left join
+  user on
+    teamScheduleWhitelist.userID=user.userID
+where
+  teamScheduleWhitelist.teamID=? and
+  teamScheduleWhitelist.scheduleID=?`, [
+      this.requestUserID, this.teamID, this.scheduleID
     ])(result => {
       return {
         users: result.rows

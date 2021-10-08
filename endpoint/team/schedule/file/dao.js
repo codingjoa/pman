@@ -39,7 +39,8 @@ class TeamScheduleFileDAO extends TeamScheduleDAO {
         resolve({
           fileName: this.req?.file?.originalname,
           file: this.req?.file?.filename,
-          path: this.req?.file?.path
+          path: this.req?.file?.path,
+          body: this.req.body
         });
       });
     });

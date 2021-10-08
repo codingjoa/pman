@@ -16,9 +16,8 @@ team('/:teamID/schedule/:scheduleID', require('./endpoint/team/schedule/detail')
 team('/:teamID/schedule/:scheduleID/comment', require('./endpoint/team/schedule/comment'));
 team('/:teamID/schedule/:scheduleID/comment/:commentID', require('./endpoint/team/schedule/comment/detail'));
 team('/:teamID/schedule/:scheduleID/file', require('./endpoint/team/schedule/file'));
-//team('/:teamID/schedule/:scheduleID/submit/me', require('./endpoint/team.detail.schedule.detail.reference.detail'));
-//team('/:teamID/schedule/:scheduleID/submit/me/file', require('./endpoint/team.detail.schedule.detail.reference.detail'));
-//team('/:teamID/schedule/:scheduleID/submit/:submitID', require('./endpoint/team.detail.schedule.detail.reference.detail'));
+team('/:teamID/schedule/:scheduleID/submit', require('./endpoint/team/schedule/submit'));
+team('/:teamID/schedule/:scheduleID/submit/:submitID', require('./endpoint/team/schedule/submit/detail'));
 //team('/:teamID/schedule/:scheduleID/submit/:submitID/file', require('./endpoint/team.detail.schedule.detail.reference.detail'));
 team('/:teamID/user/:userID', require('./endpoint/team/user'));
 const test = api('/test');

@@ -1,4 +1,5 @@
 const TeamScheduleFileDAO = require('../file/dao');
+const fs = require('fs');
 class TeamScheduleSubmitDAO extends TeamScheduleFileDAO {
   constructor(req) {
     super(req);
@@ -19,10 +20,36 @@ class TeamScheduleSubmitDAO extends TeamScheduleFileDAO {
     });
   }
 
+  isExists() {
+    if(this.submitID) {
+      this.query('select count(*)>0 as isExists from teamScheduleSubmit where teamScheduleSubmit.submitID=?', [
+        this.submitID
+      ])(result => {
+        const p = result.rows?.[0];
+        return {
+          isExists: p?.isExists
+        };
+      });
+    } else {
+      this.query('select count(*)>0 as isExists from teamScheduleSubmit where teamScheduleSubmit.teamID=? and teamScheduleSubmit.scheduleID=? and teamScheduleSubmit.userID=?', [
+        this.teamID, this.scheduleID, this.requestUserID
+      ])(result => {
+        const p = result.rows?.[0];
+        return {
+          isExists: p?.isExists
+        };
+      });
+    }
+  }
+
   checkCreatePermissions() {
     this.isScheduleType();
     this.isWhitelistMember();
+    this.isExists();
     this.query((result, storage) => {
+      if(storage.isExists) {
+        throw new Error('400 제출됨');
+      }
       if(storage.isScheduleType === 1 && storage.isWhitelistMember) {
         return;
       }
@@ -34,7 +61,12 @@ class TeamScheduleSubmitDAO extends TeamScheduleFileDAO {
     this.isSubmitOwner();
     this.isScheduleOwner();
     this.isTeamPermissions();
+    this.isExists();
     this.query((result, storage) => {
+      console.log(storage);
+      if(!storage.isExists) {
+        throw new Error('403 권한 없음');
+      }
       if(storage.isSubmitOwner) {
         return;
       }
@@ -56,104 +88,63 @@ class TeamScheduleSubmitDAO extends TeamScheduleFileDAO {
 
     this.checkCreatePermissions();
 
+    const req = await this.uploadFile(res);
     this.checkParameters(
-      this.submitContent,
+      req.body.submitContent,
       this.teamID,
       this.scheduleID,
       this.requestUserID
     );
 
-    return this.query(async result => {
-      return this.uploadFile(res);
-    })(
+    if(req.file) {
+      this.query(
 `insert into teamFiles (
   fileUUID,
   fileName
 ) values (
   ?,
   ?
-)`, storage => ([
-      storage.file,
-      storage.fileName
-    ]))(
+)`, [
+        req.file, req.fileName
+      ])(result => {
+        if(!result.affectedRows) {
+          fs.rmSync(req.path);
+          throw new Error('403 권한 없음');
+        }
+      });
+    }
+
+    return this.query(
 `insert into teamScheduleSubmit(
   teamID,
   scheduleID,
   userID,
   submitContent,
   fileUUID
-) vaules (
+) values (
   ?,
   ?,
   ?,
   ?,
   ?
-)`, storage => ([
+)`, [
       this.teamID,
       this.scheduleID,
       this.requestUserID,
-      this.submitContent,
-      this.file
-    ]))(result => {
+      req.body.submitContent,
+      (req.file ?? null)
+    ])(result => {
       if(!result.affectedRows) {
-        fs.rmSync(storage.path);
         throw new Error('403 권한 없음');
       }
       res.status(201);
       res.json({
         complete: true
       });
-    })();
-  }
-
-  async delete(res) {
-    this.isAuthorized();
-
-    this.checkDeletePermissions();
-
-    this.checkParameters(
-      this.teamID,
-      this.scheduleID,
-      this.submitID
-    );
-
-    return this.query(
-`select
-  teamScheduleSubmit.fileUUID
-from
-  teamScheduleSubmit
-where
-  teamScheduleSubmit.submitID=? and
-  teamScheduleSubmit.teamID=? and
-  teamScheduleSubmit.scheduleID=?`, [
-      this.submitID, this.teamID, this.scheduleID
-    ])(result => {
-      const p = result.rows?.[0];
-      return {
-        fileUUID: p?.fileUUID ?? ''
-      };
-    })(
-`delete from
-  teamFiles
-where
-  teamFiles.fileUUID=?`, storage => ([
-      storage.fileUUID
-    ]))(
-`delete from
-  teamScheduleSubmit
-where
-  teamScheduleSubmit.submitID=? and
-  teamScheduleSubmit.teamID=? and
-  teamScheduleSubmit.scheduleID=?`, [
-      this.submitID, this.teamID, this.scheduleID
-    ])(result => {
-      if(!result.affectedRows) {
-        throw new Error('403 권한 없음');
-      }
-      res.json({
-        complete: true
-      });
-    })();
+    })().catch(err => {
+      fs.rmSync(req.path);
+      throw err;
+    });
   }
 
   async read(res) {
