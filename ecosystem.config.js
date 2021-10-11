@@ -5,13 +5,13 @@ module.exports = {
     watch: false,
     restart_delay: 30000,
     env: {
-      'PORT': 3000,
+      'PORT': 4000,
       'HTTPS': true,
       'SSL_CRT_FILE': './ssl/cert.crt',
       'SSL_KEY_FILE': './ssl/cert.key'
     },
     env_dev: {
-      'PORT': 3000,
+      'PORT': 4000,
       'HTTPS': false
     }
   }, {

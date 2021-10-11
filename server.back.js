@@ -10,6 +10,7 @@ const team = api('/team');
 team('/', require('./endpoint/team'));
 team('/invite', require('./endpoint/team/invite/readonly'));
 team('/:teamID', require('./endpoint/team/detail'));
+team('/:teamID/docs', require('./endpoint/team/docs'));
 team('/:teamID/invite', require('./endpoint/team/invite'));
 team('/:teamID/schedule', require('./endpoint/team/schedule'));
 team('/:teamID/schedule/:scheduleID', require('./endpoint/team/schedule/detail'));

@@ -1,8 +1,10 @@
 const maria = require('../loadModules').maria;
+const level = require('level');
 class DAO {
   constructor(req) {
     this.query = maria('query');
     this.requestUserID = req.user?.id;
+    this.level = level;
   }
 
   checkParameters() {

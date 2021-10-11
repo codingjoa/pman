@@ -4,12 +4,9 @@ import * as ReactRouter from 'react-router-dom'
 import PageRouter from './PageRouter'
 
 const AccessTokenContext = React.createContext(null);
+const DeveloperAccessToken = process.env.REACT_APP_ACCESS_TOKEN;
 let currentAccessToken = null;
 
-
-function isExpired(token) {
-  // 토큰 만료 확인
-}
 async function refreshToken() {
   try {
     /*
@@ -27,20 +24,30 @@ async function refreshToken() {
 function getAccessToken() {
   return currentAccessToken;
 }
-async function createAccessToken() {
-  // refresh token 자동갱신(새로고침 없이 1시간 30분 경과시)
-  setTimeout(async () => {
-    const token = await refreshToken();
-    currentAccessToken = token ?? null;
-    if(currentAccessToken) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${currentAccessToken}`;
-    }
-  }, 5400000);
+async function setAccessToken() {
   const token = await refreshToken();
+  if(token === undefined) {
+    currentAccessToken = null;
+    return false;
+  }
   currentAccessToken = token ?? null;
   if(currentAccessToken) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${currentAccessToken}`;
   }
+  return true;
+}
+async function autoRefresh() {
+  // refresh token 자동갱신(새로고침 없이 1시간 30분 경과시)
+  (await setAccessToken() === true) && setTimeout(autoRefresh, 5400000);
+}
+async function createAccessToken() {
+  if(DeveloperAccessToken) {
+    return function getAccessToken() {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${DeveloperAccessToken}`;
+      return DeveloperAccessToken;
+    };
+  }
+  await autoRefresh();
   return getAccessToken;
 }
 function useAccessToken() {

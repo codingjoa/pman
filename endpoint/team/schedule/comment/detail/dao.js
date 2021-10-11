@@ -33,8 +33,12 @@ class TeamScheduleCommentDetailDAO extends TeamScheduleCommentDAO {
   }
 
   checkUpdatePermissions() {
+    this.isScheduleDate();
     this.isCommentOwner();
     this.query((result, storage) => {
+      if(!storage.isPublished || !storage.isNotExpired) {
+        throw new Error('403 만료됨');
+      }
       if(storage.isCommentOwner) {
         return;
       }

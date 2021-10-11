@@ -10,8 +10,12 @@ class TeamScheduleCommentDAO extends TeamScheduleDAO {
 
   checkCreatePermissions() {
     this.isScheduleType();
+    this.isScheduleDate();
     this.isWhitelistMember();
     this.query((result, storage) => {
+      if(!storage.isPublished || !storage.isNotExpired) {
+        throw new Error('403 만료됨');
+      }
       if(storage.isScheduleType === 0 && storage.isWhitelistMember) {
         return;
       }

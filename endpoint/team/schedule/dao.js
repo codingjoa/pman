@@ -30,6 +30,18 @@ class TeamScheduleDAO extends TeamDAO {
     });
   }
 
+  isScheduleDate() {
+    this.query('select teamSchedule.schedulePublishAt < current_timestamp as isPublished, teamSchedule.scheduleExpiryAt > current_timestamp as isNotExpired from teamSchedule where teamSchedule.teamID=? and teamSchedule.scheduleID=?', [
+      this.teamID, this.scheduleID
+    ])(result => {
+      const p = result.rows?.[0];
+      return {
+        isPublished: p?.isPublished,
+        isNotExpired: p?.isNotExpired
+      };
+    });
+  }
+
   isScheduleType() {
     this.query('select teamSchedule.scheduleType as isScheduleType from teamSchedule where teamSchedule.teamID=? and teamSchedule.scheduleID=?', [
       this.teamID, this.scheduleID
@@ -151,6 +163,7 @@ class TeamScheduleDAO extends TeamDAO {
       }
     })(
 `select
+  teamSchedule.scheduleID,
   teamSchedule.scheduleName,
   user.userProfileName as scheduleOwnerUserName,
   teamSchedule.schedulePublishAt,

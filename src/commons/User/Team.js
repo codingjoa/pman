@@ -5,7 +5,7 @@ import * as ReactRouter from 'react-router-dom'
 async function fetchTeams(setState) {
   try {
     const result = await axios.get('/api/v1/team');
-    setState(result.data.teams);
+    setState(result.data);
   } catch(err) {
     setState(undefined);
   }

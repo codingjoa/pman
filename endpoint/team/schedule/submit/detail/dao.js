@@ -3,6 +3,32 @@ const fs = require('fs');
 const path = require('path');
 const ROOT = process.cwd();
 class TeamScheduleSubmitDetailDAO extends TeamScheduleSubmitDAO {
+  checkDeletePermissions() {
+    this.isSubmitOwner();
+    this.isScheduleOwner();
+    this.isTeamPermissions();
+    this.isExists();
+    this.query((result, storage) => {
+      console.log(storage);
+      if(!storage.isExists) {
+        throw new Error('403 권한 없음');
+      }
+      if(storage.isSubmitOwner) {
+        return;
+      }
+      if(storage.isScheduleOwner) {
+        return;
+      }
+      if(storage.isTeamOwner) {
+        return;
+      }
+      if(storage.isTeamPermission & permissions.SCHEDULE_MANAGEMENT) {
+        return;
+      }
+      throw new Error('403 권한 없음');
+    });
+  }
+  
   async delete(res) {
     this.isAuthorized();
 

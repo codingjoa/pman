@@ -44,39 +44,17 @@ class TeamScheduleSubmitDAO extends TeamScheduleFileDAO {
 
   checkCreatePermissions() {
     this.isScheduleType();
+    this.isScheduleDate();
     this.isWhitelistMember();
     this.isExists();
     this.query((result, storage) => {
+      if(!storage.isPublished || !storage.isNotExpired) {
+        throw new Error('403 만료됨');
+      }
       if(storage.isExists) {
         throw new Error('400 제출됨');
       }
       if(storage.isScheduleType === 1 && storage.isWhitelistMember) {
-        return;
-      }
-      throw new Error('403 권한 없음');
-    });
-  }
-
-  checkDeletePermissions() {
-    this.isSubmitOwner();
-    this.isScheduleOwner();
-    this.isTeamPermissions();
-    this.isExists();
-    this.query((result, storage) => {
-      console.log(storage);
-      if(!storage.isExists) {
-        throw new Error('403 권한 없음');
-      }
-      if(storage.isSubmitOwner) {
-        return;
-      }
-      if(storage.isScheduleOwner) {
-        return;
-      }
-      if(storage.isTeamOwner) {
-        return;
-      }
-      if(storage.isTeamPermission & permissions.SCHEDULE_MANAGEMENT) {
         return;
       }
       throw new Error('403 권한 없음');

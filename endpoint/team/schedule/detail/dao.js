@@ -156,7 +156,8 @@ where
   teamSchedule.scheduleType,
   teamSchedule.scheduleContent,
   teamFiles.fileUUID,
-  teamFiles.fileName
+  teamFiles.fileName,
+  teamSchedule.userID=? as owner
 from
   teamSchedule left join
   user on
@@ -166,7 +167,7 @@ from
 where
   teamSchedule.teamID=? and
   teamSchedule.scheduleID=?`, [
-      this.teamID, this.scheduleID
+      this.requestUserID, this.teamID, this.scheduleID
     ])((result, storage) => {
       if(!result.rows.length) {
         throw new Error('404 내용 없음.');

@@ -4,7 +4,7 @@ import * as AccessToken from './AccessToken'
 import App from './App'
 import Invite from './Invite'
 import Team from './User/Team'
-import TeamDetail from './User/Team.detail'
+import TeamDetail from './User/TeamDetail'
 import User from './User'
 
 export default function PageRouter() {
@@ -31,7 +31,7 @@ export default function PageRouter() {
           <ReactRouter.Route exact path="/team">
             <Team />
           </ReactRouter.Route>
-          <ReactRouter.Route exact path="/team/:teamID">
+          <ReactRouter.Route path="/team/*">
             <TeamDetail />
           </ReactRouter.Route>
           <ReactRouter.Route path="*">
