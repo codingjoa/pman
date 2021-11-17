@@ -25,4 +25,4 @@ yarn-error.log*
 /static
 /secret
 /leveldb
-
+/tmp

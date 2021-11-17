@@ -137,11 +137,10 @@ create table if not exists pman.teamScheduleComment (
   commentCreatedAt timestamp not null default current_timestamp,
   commentModifiedAt timestamp not null default current_timestamp on update current_timestamp,
   commentContent LONGTEXT not null,
-  foreign key (teamID, scheduleID, userID) references teamScheduleWhitelist(teamID, scheduleID, userID) on delete cascade on update cascade,
-  unique (teamID, scheduleID, userID),
+  foreign key (teamID, userID) references teamMember(teamID, userID) on delete cascade on update cascade,
+  foreign key (scheduleID, teamID) references teamSchedule(scheduleID, teamID) on delete cascade on update cascade,
   primary key(commentID)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
-
 
 
 

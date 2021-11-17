@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap');
+* { color: #666; font-family: 'Noto Sans KR', sans-serif; }
+
+.line {
+  display: block;
+  border: solid 1px #eee;
+  margin: 0.5rem 0;
+}
+
+.nickname {
+  font-weight: bold;
+}
+
+.timestamp,
+.schedule-attr {
+  color: #aaa;
+}
+
+
+
+
+.md-content table,
+.md-content td,
+.md-content th {
+    border: 1px solid black; padding:10px;
+}

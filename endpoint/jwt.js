@@ -1,27 +1,25 @@
 const jwt = require('jsonwebtoken');
-// const key
+const key = 'development';
 const iss = 'development';
-function createJWT(
-  id, expiresIn
-) {
+function createJWT(payloads, expiresIn) {
   const iat = Date.now() / 1000;
   const payload = {
+    ...payloads,
     iss, // 발행자
     iat,
     exp: iat + expiresIn,
-    id
-    //roles: ['read']
+    //roles: ['read'],
   };
-  const token = jwt.sign(payload, 'development', {
-    algorithm: 'HS256'
+  const token = jwt.sign(payload, key, {
+    algorithm: 'HS256',
   });
   return token;
 }
 function validateJWT(token) {
   const payload = jwt.verify(token, 'development', {
-    algorithms: ['HS256']
+    algorithms: ['HS256'],
   });
-  return payload.id;
+  return payload;
 }
 
 module.exports = {
