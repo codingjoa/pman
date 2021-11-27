@@ -51,23 +51,6 @@ module.exports = (app, TeamScheduleDetailDAO) => {
       this.useFilesystem(req.file, '/static/file');
     }
 
-    async uploadFile(res) {
-      return new Promise((resolve, reject) => {
-        uploadFileExecute(this.req, res, err => {
-          if(err) {
-            reject(err);
-            return;
-          }
-          resolve({
-            fileName: this.req?.file?.originalname,
-            file: this.req?.file?.filename,
-            path: this.req?.file?.path,
-            body: this.req.body
-          });
-        });
-      });
-    }
-
     async delete(res) {
       this.isAuthorized();
       this.checkParameters(this.scheduleID, this.teamID);

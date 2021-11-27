@@ -143,6 +143,24 @@ create table if not exists pman.teamScheduleComment (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 
+create table if not exists pman.teamWiki (
+  wikiID int unsigned not null,
+  teamID int unsigned not null,
+  createdAt timestamp not null default current_timestamp,
+  modifiedAt timestamp not null default current_timestamp on update current_timestamp,
+  wikiTitle varchar(256) not null,
+  wikiContent LONGTEXT not null,
+  foreign key (teamID) references team(teamID) on delete cascade on update cascade,
+  primary key (wikiID)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+create table if not exists pman.teamWebhook (
+  teamID int unsigned not null AUTO_INCREMENT,
+  webhookURL varchar(2083) not null,
+  foreign key (teamID) references team(teamID) on update cascade,
+  unique (teamID)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
 
 
 

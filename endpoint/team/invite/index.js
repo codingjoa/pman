@@ -14,13 +14,13 @@ module.exports = (app, TeamModel) => {
 
     async checkReadPermissions(db) {
       if(await this.isTeamMember()) {
-        throw new Error('400 이미 소속된 팀');
+        throw new TeamInvite.Error400('USER_EXISTS');
       }
       const teams = await db.get('select team.teamInviteCount, count(teamMember.userID=?)>0 as isJoined from team left join teamMember on team.teamID=teamMember.teamID where team.teamID=?', [
         this.requestUserID, this.teamID
       ]);
       if(!teams[0] || this.teamInviteCount !== teams[0].teamInviteCount) {
-        throw new Error('403 권한 없음');
+        throw new TeamInvite.Error403();
       }
     }
 
@@ -33,7 +33,7 @@ module.exports = (app, TeamModel) => {
           this.requestUserID, this.teamID
         ]);
         if(!result.affectedRows) {
-          throw new Error('적용되지 않음');
+          throw new TeamInvite.Error500('DB_ERROR');
         }
         res.json({
           redirectURL: new URL(`/team/${this.teamID}`, env.FRONT_DOMAIN).href

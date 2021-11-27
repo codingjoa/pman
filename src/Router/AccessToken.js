@@ -41,8 +41,8 @@ async function autoRefresh() {
 }
 async function createAccessToken() {
   if(DeveloperAccessToken) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${DeveloperAccessToken}`;
     return function getAccessToken() {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${DeveloperAccessToken}`;
       return DeveloperAccessToken;
     };
   }
@@ -50,19 +50,27 @@ async function createAccessToken() {
   return getAccessToken;
 }
 function useAccessToken() {
-  const promise = React.useContext(AccessTokenContext);
-  return promise;
+  const state = React.useContext(AccessTokenContext);
+  return state;
+}
+function useAuthorized() {
+  const state = React.useContext(AccessTokenContext);
+  if(state) {
+    return true;
+  }
+  return state;
 }
 const AccessToken = React.memo(function AccessToken() {
-  const accessToken = createAccessToken();
+  const [ state, setState ] = React.useState(null);
+  createAccessToken().then(accessToken => setState(accessToken)).catch(() => setState(false));
   return (
     <AccessTokenContext.Provider
-      value={accessToken}
+      value={state}
     >
       <PageRouter />
     </AccessTokenContext.Provider>
   );
 });
 
-export { useAccessToken };
+export { useAccessToken, useAuthorized };
 export default AccessToken;

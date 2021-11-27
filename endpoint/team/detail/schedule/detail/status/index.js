@@ -12,6 +12,33 @@ module.exports = (app, TeamScheduleDetailModel) => {
       return !! status[0].isExist;
     }
 
+    async checkCreatePermissions(db) {
+      await this.checkReadPermissions(db);
+      if(!await this.checkScheduleMember(db)) {
+        throw new TeamScheduleStatusModel.Error403Forbidden();
+      };
+      if(!await this.checkStatusExist(db)) {
+        throw new TeamScheduleStatusModel.Error400('IS_EXISTS');
+      };
+    }
+
+    async create(res) {
+      this.isAuthorized();
+      this.checkParameters();
+      await this.dao.serialize(async db => {
+        await this.checkCreatePermissions(db);
+        const result = await db.run('insert into teamScheduleStatus() values ()', [
+
+        ]);
+        if(result.affectedRows) {
+          throw new TeamScheduleStatusModel.Error500('DB_ERROR');
+        }
+        res.status(201).json({
+          complete: true,
+        });
+      });
+    }
+
     async read(res) {
       this.isAuthorized();
       this.checkParameters(
@@ -48,8 +75,7 @@ module.exports = (app, TeamScheduleDetailModel) => {
         throw new TeamScheduleStatusModel.Error403Forbidden();
       }
       if(!await this.checkScheduleAvailable(db)) {
-        throw new Error('400 만료됨');
-        //throw new TeamScheduleStatusModel.Error400('만료됨');
+        throw new TeamScheduleStatusModel.Error400('EXPIRED_SCHEDULE');
       }
     }
 
@@ -80,7 +106,7 @@ module.exports = (app, TeamScheduleDetailModel) => {
             this.teamID, this.scheduleID, this.requestUserID, req.body.submitContent,
           ]);
           if(!result.affectedRows) {
-            throw new Error('403 권한 없음');
+            throw new TeamScheduleStatusModel.Error403();
           }
           res.json({
             complete: true

@@ -15,12 +15,30 @@ module.exports = (app, TeamDetailModel) => {
       //this.scheduleType = req.body?.scheduleType ?? 0;
     }
 
+    publishWebhook(message) {
+      this.dao.serialize(async db => {
+        const users = await db.get('select userProfileName as username, case when userProfileImg is not null then userProfileImg else userProfileImgDefault end as avatar_url from user where user.userID=?', [
+          this.requestUserID
+        ]);
+        if(!users[0]) {
+          return;
+        }
+        const webhooks = await db.get('select webhookURL from teamWebhook where teamWebhook.teamID=?', [
+          this.teamID
+        ]);
+        if(!webhooks[0]) {
+          return;
+        }
+        super.publishWebhook(webhooks[0].webhookURL, users[0], message);
+      }).catch(console.error);
+    }
+
     async checkCreatePermissions(db) {
       // 이전에는 권한이 있어야만 가능했으나 계획 변경
       if(await this.checkTeamMember(db)) {
         return;
       }
-      throw new Error('403 권한 없음');
+      throw new TeamScheduleModel.Error403();
     }
 
     async create(res) {
@@ -55,13 +73,15 @@ module.exports = (app, TeamDetailModel) => {
           ]
         );
         if(!result.affectedRows) {
-          throw new Error('403 권한 없음');
+          throw new TeamScheduleModel.Error403();
         }
         res.status(201);
         res.json({
           complete: true
         });
       });
+
+      this.publishWebhook(`[새로운 일정] ${this.scheduleName}`);
     }
 
     async getSchedules(db) {

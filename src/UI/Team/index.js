@@ -1,9 +1,12 @@
-import TeamNavigation from './TeamNavigation'
 import BackNavigation from './BackNavigation'
+import Info from './Info'
+import ScheduleDetail from './ScheduleDetail'
 import ScheduleList from './ScheduleList'
 import ScheduleListOption from './ScheduleListOption'
-import ScheduleDetail from './ScheduleDetail'
-import Info from './Info'
+import Settings from './Settings'
+import TeamNavigation from './TeamNavigation'
+import TeamUsers from './TeamUsers'
+import Wiki from './Wiki'
 import * as ReactRouter from 'react-router-dom'
 
 // bootstrap
@@ -40,12 +43,17 @@ function TeamDetail() {
             <ReactRouter.Route exact path="/ui/team/:teamID">
               <ScheduleList />
               <Info />
+              <Settings />
+              <TeamUsers />
             </ReactRouter.Route>
             <ReactRouter.Route exact path="/ui/team/:teamID/schedule">
               <ScheduleListOption />
             </ReactRouter.Route>
             <ReactRouter.Route exact path="/ui/team/:teamID/schedule/:scheduleID">
               <ScheduleDetail />
+            </ReactRouter.Route>
+            <ReactRouter.Route exact path="/ui/team/:teamID/wiki">
+              <Wiki />
             </ReactRouter.Route>
           </ReactRouter.Switch>
         </Col>

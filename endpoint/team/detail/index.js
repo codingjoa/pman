@@ -12,7 +12,7 @@ module.exports = (app, TeamModel) => {
         team.teamID=?`, [
         this.requestUserID, this.teamID
       ]);
-      return result[0]?.isTeamMember===1
+      return result[0]?.isTeamMember===1;
     }
 
     async checkTeamOwned(db) {
@@ -32,8 +32,8 @@ module.exports = (app, TeamModel) => {
     }
 
     async renameTeam(db) {
-      const result = await db.run('update team set teamProfileName=? where team.yeamID=?', [
-        this.teamProfileName, this.teamID
+      const result = await db.run('update team set teamProfileName=?, teamProfileDescription=? where team.teamID=?', [
+        this.teamProfileName, this.teamProfileDescription, this.teamID
       ]);
       return !!result.affectedRows;
     }
@@ -42,7 +42,7 @@ module.exports = (app, TeamModel) => {
       if(await this.checkTeamMember(db)) {
         return;
       }
-      throw new Error('403 권한 없음');
+      throw new TeamDetailModel.Error403();
     }
 
     async read(res) {
@@ -57,12 +57,15 @@ module.exports = (app, TeamModel) => {
             when 1
             then user.userProfileImgDefault
             else user.userProfileImg
-          end as teamOwnerUserImg
+          end as teamOwnerUserImg,
+          teamWebhook.webhookURL
         from
           team left join teamMember on
             team.teamID=teamMember.teamID left join
           user on
-            team.teamOwnerUserID=user.userID
+            team.teamOwnerUserID=user.userID left join
+          teamWebhook on
+            team.teamID=teamWebhook.teamID
         where
           team.teamID=?`, [
           this.teamID
@@ -75,6 +78,7 @@ module.exports = (app, TeamModel) => {
             then user.userProfileImgDefault
             else user.userProfileImg
           end as userProfileImg,
+          teamMember.teamJoinedAt,
           teamMember.userID=team.teamOwnerUserID as isOwner
         from
           team left join teamMember on
@@ -96,12 +100,12 @@ module.exports = (app, TeamModel) => {
       if(await this.checkTeamOwned(db)) {
         return;
       }
-      throw new Error('403 권한 없음');
+      throw new TeamDetailModel.Error403();
     }
 
     async update(res) {
       this.isAuthorized();
-      this.checkParameters(this.teamName, this.teamID);
+      this.checkParameters(this.teamProfileName, this.teamProfileDescription, this.teamID);
       await this.dao.serialize(async db => {
         await this.checkUpdatePermissions(db);
         if(! await this.renameTeam(db)) {
@@ -112,11 +116,38 @@ module.exports = (app, TeamModel) => {
         });
       });
     }
+
+    async checkDeletePermissions(db) {
+      if(await this.checkTeamOwned(db)) {
+        return;
+      }
+      throw new TeamModel.Error403();
+    }
+
+    async delete(res) {
+      this.isAuthorized();
+      this.checkParameters(this.teamID);
+      await this.dao.serialize(async db => {
+        await this.checkDeletePermissions(db);
+        const result = await db.run('delete from team where team.teamID=?', [
+          this.teamID
+        ]);
+        if(!result.affectedRows) {
+          throw new TeamModel.Error403();
+        }
+        res.json({
+          complete: true
+        });
+      });
+    }
   }
   app(TeamDetailModel);
   app.read();
   app.update();
+  app.delete();
   app.child('/schedule', require('./schedule'));
   app.child('/invite', require('./invite'));
   app.child('/user/:userID', require('./user'));
+  app.child('/webhook', require('./webhook'));
+  app.child('/wiki', require('./wiki'));
 }

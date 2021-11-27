@@ -1,5 +1,12 @@
 module.exports = (app, TeamDetailModel) => {
   class TeamInviteCreate extends TeamDetailModel {
+    async checkCreatePermissions(db) {
+      if(await this.checkTeamOwned(db)) {
+        return;
+      }
+      throw new TeamInviteCreate.Error403();
+    }
+
     async create(res) {
       this.isAuthorized();
       this.checkParameters(this.teamID);
@@ -30,8 +37,9 @@ module.exports = (app, TeamDetailModel) => {
         }, 86400);
         res.status(201);
         res.json({
-          intiveToken,
-          intiveURL: new URL(`/invite?token=${inviteToken}`, env.FRONT_DOMAIN).href,
+          inviteToken,
+          inviteCount: teamInviteCount,
+          inviteURL: new URL(`/invite?token=${inviteToken}`, TeamInviteCreate.env.FRONT_DOMAIN).href,
         });
       });
     }

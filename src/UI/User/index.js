@@ -1,7 +1,7 @@
 import axios from 'axios'
-import * as AccessToken from 'Router/AccessToken'
 import React from 'react'
 import Teams from './Teams'
+import CreateTeam from './CreateTeam'
 
 async function fetchMe(getAccessToken) {
   /*
@@ -18,10 +18,9 @@ async function fetchMe(getAccessToken) {
 
 
 function Header() {
-  const promise = AccessToken.useAccessToken();
   const [ user, setUser ] = React.useState(null);
   React.useEffect(() => {
-    promise.then(fetchMe).then(user => setUser(user));
+    fetchMe().then(user => setUser(user));
   }, []);
   const dom = React.useMemo(() => {
     if(!user) {
@@ -29,8 +28,8 @@ function Header() {
     }
     return (
       <>
-        <h4>안녕하세요. {user?.profileName}님!</h4>
-        <img src={user?.profileImage} />
+        <h4>안녕하세요. {user.profileName}님!</h4>
+        <img src={user.profileImage} alt="profileImage" />
       </>
     );
   }, [ user ]);
@@ -42,6 +41,7 @@ export default function User() {
     <div>
       <Header />
       <Teams />
+      <CreateTeam />
     </div>
   );
 }

@@ -9,16 +9,16 @@ module.exports = (app, TeamDetailModel) => {
       }
     }
 
-    async checkDeletePermissions() {
+    async checkDeletePermissions(db) {
       if(this.userID === this.requestUserID) {
-        if(await this.checkTeamOwner()) {
-          throw new Error('403 권한 없음');
+        if(await this.checkTeamOwned(db)) {
+          throw new TeamUserModel.Error403();
           // 관리자는 나갈 수 없음.
         }
         // 자기 자신은 일반유저일 때
       } else {
-        if(!await this.checkTeamOwner()) {
-          throw new Error('403 권한 없음');
+        if(!await this.checkTeamOwned(db)) {
+          throw new TeamUserModel.Error403();
         }
       }
     }
@@ -44,7 +44,7 @@ module.exports = (app, TeamDetailModel) => {
           this.teamID, this.userID, this.teamID
         ]);
         if(!result.affectedRows) {
-          throw new Error('403 권한 없음');
+          throw new TeamUserModel.Error403();
         }
         res.json({
           complete: true

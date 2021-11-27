@@ -107,7 +107,7 @@ module.exports = (app, TeamScheduleModel) => {
           this.requestUserID, this.teamID, this.scheduleID
         ]);
         if(!schedules.length) {
-          throw new Error('404 내용 없음.');
+          throw new TeamScheduleDetailModel.Error404();
         }
         res.json({
           ...schedules[0],
@@ -123,7 +123,7 @@ module.exports = (app, TeamScheduleModel) => {
       if(await this.checkScheduleOwned(db)) {
         return;
       }
-      throw new Error('403 권한 없음');
+      throw new TeamScheduleDetailModel.Error403();
     }
 
     async checkDeletePermissions(db) {
@@ -133,7 +133,7 @@ module.exports = (app, TeamScheduleModel) => {
       if(await this.checkTeamOwned(db)) {
         return;
       }
-      throw new Error('403 권한 없음');
+      throw new TeamScheduleDetailModel.Error403();
     }
 
     async delete(res) {
@@ -141,11 +141,11 @@ module.exports = (app, TeamScheduleModel) => {
       this.checkParameters(this.teamID, this.scheduleID);
       await this.dao.serialize(async db => {
         await this.checkDeletePermissions(db);
-        const result = await db.get('delete from teamSchedule where teamSchedule.teamID=? and teamSchedule.scheduleID=?'[
+        const result = await db.run('delete from teamSchedule where teamSchedule.teamID=? and teamSchedule.scheduleID=?', [
           this.teamID, this.scheduleID
         ]);
         if(!result.affectedRows) {
-          throw new Error('403 권한 없음');
+          throw new TeamScheduleDetailModel.Error403();
         }
         res.json({
           complete: true
