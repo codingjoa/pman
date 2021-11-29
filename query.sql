@@ -144,7 +144,7 @@ create table if not exists pman.teamScheduleComment (
 
 
 create table if not exists pman.teamWiki (
-  wikiID int unsigned not null,
+  wikiID int unsigned not null AUTO_INCREMENT,
   teamID int unsigned not null,
   createdAt timestamp not null default current_timestamp,
   modifiedAt timestamp not null default current_timestamp on update current_timestamp,
@@ -159,6 +159,19 @@ create table if not exists pman.teamWebhook (
   webhookURL varchar(2083) not null,
   foreign key (teamID) references team(teamID) on update cascade,
   unique (teamID)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+create table if not exists pman.teamScheduleStatus (
+  teamID int unsigned not null,
+  scheduleID int unsigned not null,
+  userID int unsigned not null,
+  createdAt timestamp not null default current_timestamp,
+  modifiedAt timestamp not null default current_timestamp on update current_timestamp,
+  statusContent varchar(255) not null,
+  fileUUID char(36) null,
+  foreign key (teamID, scheduleID, userID) references teamScheduleWhitelist(teamID, scheduleID, userID) on delete cascade on update cascade,
+  foreign key (fileUUID) references teamFiles(fileUUID) on delete set null on update cascade,
+  unique (teamID, scheduleID, userID)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 

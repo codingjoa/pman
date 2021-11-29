@@ -7,6 +7,7 @@ import Settings from './Settings'
 import TeamNavigation from './TeamNavigation'
 import TeamUsers from './TeamUsers'
 import Wiki from './Wiki'
+import WikiEdit from './WikiEdit'
 import * as ReactRouter from 'react-router-dom'
 
 // bootstrap
@@ -54,6 +55,12 @@ function TeamDetail() {
             </ReactRouter.Route>
             <ReactRouter.Route exact path="/ui/team/:teamID/wiki">
               <Wiki />
+            </ReactRouter.Route>
+            <ReactRouter.Route exact path="/ui/team/:teamID/wiki/edit">
+              <WikiEdit />
+            </ReactRouter.Route>
+            <ReactRouter.Route exact path="/ui/team/:teamID/wiki/edit/:wikiID">
+              <WikiEdit editmode />
             </ReactRouter.Route>
           </ReactRouter.Switch>
         </Col>

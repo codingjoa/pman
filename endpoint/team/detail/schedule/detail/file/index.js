@@ -1,49 +1,3 @@
-// upload
-const multer = require('multer');
-const uuidv4 = require('uuid').v4;
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, '/home/ky/pman/tmp');
-  },
-  filename(req, file, cb) {
-    cb(null, uuidv4());
-    /*
-    const extname = checkMimetype(file);
-    if(extname) {
-      const uuid = uuidv4().replace(/-/gi, '');
-      cb(null, `${uuid}.${extname}`);
-    } else {
-      cb(new Error('400 허용되지 않는 파일 타입'));
-    }
-    */
-  }
-});
-function checkMimetype(file) {
-  let type;
-  if(file.mimetype === 'image/png') {
-    return 'png';
-  }
-  if(file.mimetype === 'image/jpeg') {
-    return 'jpg';
-  }
-  if(file.mimetype === 'image/gif') {
-    return 'gif';
-  }
-  return false;
-}
-const uploadFileExecute = multer({
-  storage,
-  limits: {
-    fieldSize: '2MB',
-    fields: 5,
-    fileSize: '10MB'
-  },
-}).single('file');
-
-// download
-const path = require('path');
-const ROOT = process.cwd();
-
 module.exports = (app, TeamScheduleDetailDAO) => {
   class TeamScheduleFileDAO extends TeamScheduleDetailDAO {
     constructor(req) {
@@ -107,9 +61,9 @@ module.exports = (app, TeamScheduleDetailDAO) => {
           this.teamID, this.scheduleID
         ]);
         if(!files[0]?.fileUUID) {
-          throw new Error('404 파일 없음');
+          throw new TeamScheduleFileDAO.Error404();
         }
-        res.download(path.join(ROOT, 'static/file', files[0].fileUUID), files[0].fileName);
+        this.download(res, files[0]);
       });
     }
 
@@ -153,5 +107,5 @@ module.exports = (app, TeamScheduleDetailDAO) => {
   app.read();
   app.update();
   app.delete();
-  app.middlewares(uploadFileExecute);
+  app.middlewares(TeamScheduleFileDAO.uploadFileExecute);
 }

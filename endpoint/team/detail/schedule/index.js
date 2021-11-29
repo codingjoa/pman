@@ -15,7 +15,7 @@ module.exports = (app, TeamDetailModel) => {
       //this.scheduleType = req.body?.scheduleType ?? 0;
     }
 
-    publishWebhook(message) {
+    publishWebhook(scheduleID, message) {
       this.dao.serialize(async db => {
         const users = await db.get('select userProfileName as username, case when userProfileImg is not null then userProfileImg else userProfileImgDefault end as avatar_url from user where user.userID=?', [
           this.requestUserID
@@ -29,7 +29,8 @@ module.exports = (app, TeamDetailModel) => {
         if(!webhooks[0]) {
           return;
         }
-        super.publishWebhook(webhooks[0].webhookURL, users[0], message);
+        const frontURL = new URL(`/ui/team/${this.teamID}/schedule/${scheduleID}`, TeamScheduleModel.env.FRONT_DOMAIN).href;
+        super.publishWebhook(webhooks[0].webhookURL, users[0], message, frontURL);
       }).catch(console.error);
     }
 
@@ -50,7 +51,7 @@ module.exports = (app, TeamDetailModel) => {
         this.scheduleName,
         this.scheduleContent
       );
-      await this.dao.serialize(async db => {
+      const scheduleID = await this.dao.serialize(async db => {
         await this.checkCreatePermissions(db);
         const result = await db.run(
           `insert into teamSchedule(
@@ -79,9 +80,10 @@ module.exports = (app, TeamDetailModel) => {
         res.json({
           complete: true
         });
+        return result.lastID;
       });
 
-      this.publishWebhook(`[새로운 일정] ${this.scheduleName}`);
+      this.publishWebhook(scheduleID, `[새로운 일정/#${scheduleID}] ${this.scheduleName}`);
     }
 
     async getSchedules(db) {

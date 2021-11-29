@@ -11,6 +11,53 @@ class Error404 extends Error {}
 class Error500 extends Error {}
 
 
+
+// upload
+const multer = require('multer');
+const uuidv4 = require('uuid').v4;
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, '/home/ky/pman/tmp');
+  },
+  filename(req, file, cb) {
+    cb(null, uuidv4());
+    /*
+    const extname = checkMimetype(file);
+    if(extname) {
+      const uuid = uuidv4().replace(/-/gi, '');
+      cb(null, `${uuid}.${extname}`);
+    } else {
+      cb(new Error('400 허용되지 않는 파일 타입'));
+    }
+    */
+  }
+});
+function checkMimetype(file) {
+  let type;
+  if(file.mimetype === 'image/png') {
+    return 'png';
+  }
+  if(file.mimetype === 'image/jpeg') {
+    return 'jpg';
+  }
+  if(file.mimetype === 'image/gif') {
+    return 'gif';
+  }
+  return false;
+}
+const uploadFileExecute = multer({
+  storage,
+  limits: {
+    fieldSize: '2MB',
+    fields: 5,
+    fileSize: '10MB'
+  },
+}).single('file');
+// download
+const path = require('path');
+const ROOT = process.cwd();
+
+
 class Model {
   static Error400Parameter = Error400Parameter;
   static Error400 = Error400;
@@ -18,6 +65,7 @@ class Model {
   static Error403 = Error403;
   static Error404 = Error404;
   static Error500 = Error500;
+  static uploadFileExecute = uploadFileExecute;
   static env = env;
 
   constructor(req) {
@@ -31,7 +79,11 @@ class Model {
     this.file = new FileSystem(file, dir);
   }
 
-  publishWebhook(url, user, message) {
+  download(res, file) {
+    res.download(path.join(ROOT, 'static/file', file.fileUUID), file.fileName);
+  }
+
+  publishWebhook(url, user, message, frontUrl) {
     setImmediate(() => {
       const {
         username,
@@ -44,7 +96,13 @@ class Model {
           username,
           avatar_url,
           embeds: [{
-            description: message,
+            author: {
+              name: username,
+              icon_url: avatar_url,
+            },
+            title: message,
+            url: frontUrl,
+            color: 880381,
           }],
         },
       }).catch(console.error);

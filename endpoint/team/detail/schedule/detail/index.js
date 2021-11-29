@@ -18,7 +18,7 @@ module.exports = (app, TeamScheduleModel) => {
       const result = await db.get('select teamSchedule.schedulePublishAt < current_timestamp as isPublished, teamSchedule.scheduleExpiryAt > current_timestamp as isNotExpired from teamSchedule where teamSchedule.teamID=? and teamSchedule.scheduleID=?', [
         this.teamID, this.scheduleID
       ])
-      return result[0].isScheduleOwner===0 && result[0].isNotExpired===1;
+      return result[0].isPublished===1 && result[0].isNotExpired===1;
     }
 
     async checkScheduleType(db) {
@@ -83,6 +83,32 @@ module.exports = (app, TeamScheduleModel) => {
             teamScheduleWhitelist.scheduleID=?)`, [
           this.requestUserID, this.teamID, this.teamID, this.scheduleID
         ]);
+        const status = await db.get(`select
+          user.userID,
+          teamScheduleStatus.createdAt,
+          teamScheduleStatus.statusContent,
+          teamFiles.fileName,
+          user.userProfileName,
+          case user.userProfileImg is null
+            when 1
+            then user.userProfileImgDefault
+            else user.userProfileImg
+          end as userProfileImg
+        from
+          teamScheduleWhitelist left join
+          teamScheduleStatus on
+            teamScheduleWhitelist.teamID=teamScheduleStatus.teamID and
+            teamScheduleWhitelist.scheduleID=teamScheduleStatus.scheduleID and
+            teamScheduleWhitelist.userID=teamScheduleStatus.userID left join
+          teamFiles on
+            teamScheduleStatus.fileUUID=teamFiles.fileUUID left join
+          user on
+            teamScheduleWhitelist.userID=user.userID
+        where
+          teamScheduleWhitelist.teamID=? and
+          teamScheduleWhitelist.scheduleID=?`, [
+          this.teamID, this.scheduleID
+        ]);
         const schedules = await db.get(`select
           teamSchedule.scheduleName,
           user.userProfileName as scheduleOwnerUserName,
@@ -94,17 +120,20 @@ module.exports = (app, TeamScheduleModel) => {
           teamSchedule.scheduleContent,
           teamFiles.fileUUID,
           teamFiles.fileName,
-          teamSchedule.userID=? as owner
+          teamSchedule.userID=? as owner,
+          count(teamScheduleWhitelist.userID=?)>0 as myjob
         from
           teamSchedule left join
           user on
             teamSchedule.userID=user.userID left join
           teamFiles on
-            teamSchedule.fileUUID=teamFiles.fileUUID
+            teamSchedule.fileUUID=teamFiles.fileUUID left join
+          teamScheduleWhitelist on
+            teamSchedule.scheduleID=teamScheduleWhitelist.scheduleID
         where
           teamSchedule.teamID=? and
           teamSchedule.scheduleID=?`, [
-          this.requestUserID, this.teamID, this.scheduleID
+          this.requestUserID, this.requestUserID, this.teamID, this.scheduleID
         ]);
         if(!schedules.length) {
           throw new TeamScheduleDetailModel.Error404();
@@ -114,6 +143,7 @@ module.exports = (app, TeamScheduleModel) => {
           users,
           teamID: this.teamID,
           scheduleID: this.scheduleID,
+          status,
           norefUsers,
         });
       });
@@ -225,4 +255,5 @@ module.exports = (app, TeamScheduleModel) => {
   app.patch();
   app.child('/comment', require('./comment'));
   app.child('/file', require('./file'));
+  app.child('/status', require('./status'));
 };

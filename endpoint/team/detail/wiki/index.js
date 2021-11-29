@@ -1,5 +1,26 @@
 module.exports = (app, TeamDetailModel) => {
   class TeamWikiModel extends TeamDetailModel {
+    constructor(req) {
+      super(req);
+      this.wikiTitle = req.body?.wikiTitle;
+      this.wikiContent = req.body?.wikiContent;
+    }
+    async create(res) {
+      this.isAuthorized();
+      this.checkParameters(this.teamID, this.wikiTitle, this.wikiContent);
+      await this.dao.serialize(async db => {
+        await this.checkReadPermissions(db);
+        const result = await db.run('insert into teamWiki (teamID, wikiTitle, wikiContent) values (?, ?, ?)', [
+          this.teamID, this.wikiTitle, this.wikiContent
+        ]);
+        if(!result.affectedRows) {
+          throw new TeamWikiModel.Error403();
+        }
+        res.status(201).json({
+          wikiID: result.lastID,
+        });
+      });
+    }
     async read(res) {
       this.isAuthorized();
       this.checkParameters(this.teamID);
@@ -16,6 +37,7 @@ module.exports = (app, TeamDetailModel) => {
     }
   }
   app(TeamWikiModel);
+  app.create();
   app.read();
   app.child('/:wikiID', require('./detail'));
 }

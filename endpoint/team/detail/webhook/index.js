@@ -20,6 +20,12 @@ module.exports = (app, TeamDetailModel) => {
             this.teamID
           ]);
         } else {
+          if(
+            ! (/^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/(?:[A-Za-z0-9+/]|-)+$/.test(this.webhookURL))
+          ) {
+            throw new TeamWebhookModel.Error400Parameter();
+          }
+
           const exists = await db.get('select count(*) as isExists from teamWebhook where teamWebhook.teamID=?', [
             this.teamID
           ]);

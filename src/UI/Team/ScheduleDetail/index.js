@@ -23,6 +23,7 @@ import EditContent from './EditContent'
 import EditRef from './EditRef'
 import File from './File'
 import Status from './Status'
+import ScheduleStatus from './ScheduleStatus'
 
 import * as TimeStamp from 'Common/TimeStamp'
 import * as Badges from 'Common/Badges'
@@ -34,7 +35,7 @@ import fetchSchedule from 'Async/fetchSchedule'
 
 async function fetchScheduleComments(teamID, scheduleID, start, setState) {
   try {
-    const result = await axios.get(`/api/v1/team/${teamID}/schedule/${scheduleID}/comment?start=${start*15}&limit=${start*15+15}`);
+    const result = await axios.get(`/api/v1/team/${teamID}/schedule/${scheduleID}/comment?start=${start*15}&limit=${15}`);
     setState(result.data);
   } catch(err) {
     setState(undefined);
@@ -58,7 +59,7 @@ async function addScheduleComments(teamID, scheduleID, commentContent) {
 
 function Users(row, index) {
   return (
-    <UserFigure userName={row.userProfileName} src={row.userProfileImg} me={row.me} key={index} />
+    <UserFigure userName={row.userProfileName} src={row.userProfileImg} me={!!row.me} key={index} />
   );
 }
 
@@ -79,12 +80,23 @@ function ScheduleDetailInfo({
           <Badges.Reversion>{schedule.scheduleReversion}</Badges.Reversion>
         </Col>
       </Row>
+      <Row>
+        <Col>
+          <EditContent
+            content={schedule.scheduleContent}
+            title={schedule.scheduleName}
+            publishDate={schedule.schedulePublishAt}
+            expiryDate={schedule.scheduleExpiryAt}
+          />
+          <Delete />
+        </Col>
+      </Row>
       <Row className="mb-1">
         <Col xs="2">
           <h6>제안자</h6>
         </Col>
         <Col>
-          <UserFigure userName={schedule.scheduleOwnerUserName} src={schedule.scheduleOwnerUserImg} me={schedule.owner} />
+          <UserFigure userName={schedule.scheduleOwnerUserName} src={schedule.scheduleOwnerUserImg} me={!!schedule.owner} />
         </Col>
       </Row>
       <Row className="mb-1">
@@ -108,37 +120,25 @@ function ScheduleDetailInfo({
         </Col>
       </Row>
       <File fileName={schedule.fileName} owner={schedule.owner} />
+      {schedule.myjob===1 && <ScheduleStatus />}
       <Row>
         <Col>
-          <EditContent
-            content={schedule.scheduleContent}
-            title={schedule.scheduleName}
-            publishDate={schedule.schedulePublishAt}
-            expiryDate={schedule.scheduleExpiryAt}
-          />
-          <Delete />
+          <div className="line"></div>
+          <ReactMarkdown remarkPlugins={[ remarkGfm ]} rehypePlugins={[ rehypeRaw ]} className="md-content">
+            {schedule.scheduleContent}
+          </ReactMarkdown>
         </Col>
       </Row>
       <Row>
-        <Col xl="8" className="mb-4">
-          <Row>
-            <Col>
-              <div className="line"></div>
-              <ReactMarkdown remarkPlugins={[ remarkGfm ]} rehypePlugins={[ rehypeRaw ]} className="md-content">
-                {schedule.scheduleContent}
-              </ReactMarkdown>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <div className="line"></div>
-              <ScheduleComments />
-            </Col>
-          </Row>
-        </Col>
-        <Col xl="4">
+        <Col xl="6" className="mb-4">
           <div className="line"></div>
-          <Status />
+          <h3>의견 작성</h3>
+          <ScheduleComments />
+        </Col>
+        <Col xl="6">
+          <div className="line"></div>
+          <h3>작업 현황</h3>
+          <Status status={schedule?.status} />
         </Col>
       </Row>
     </>
@@ -187,7 +187,7 @@ function Comments({
             <Col>
               <Form.Control ref={ref} aria-label="답변 작성하기" placeholder="새 답변..." />
             </Col>
-            <Col xs="4">
+            <Col xs="auto">
               <Button onClick={handleSubmit}>
                 저장
               </Button>

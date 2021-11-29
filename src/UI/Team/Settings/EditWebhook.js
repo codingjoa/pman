@@ -14,13 +14,19 @@ async function editWebhook({
   teamID,
   webhookURL,
 }) {
-  await axios({
+  const code = await axios({
     method: 'PUT',
     url: `/api/v1/team/${teamID}/webhook`,
     data: {
       webhookURL,
     },
+  }).then(res => 200, err => {
+    if(err.response.status === 400) {
+      return 400;
+    }
+    throw err;
   });
+  return code
 }
 
 function Alerter({
@@ -38,6 +44,12 @@ function Alerter({
         실패했습니다.
       </Alert>
     );
+  } else if(state === 'failed-parameter') {
+    return (
+      <Alert variant="danger">
+        유효한 웹훅 URL이 아닙니다.
+      </Alert>
+    );
   }
   return null;
 }
@@ -52,7 +64,13 @@ export default function EditWebhook() {
     editWebhook({
       teamID: params.teamID,
       webhookURL: url.current.value,
-    }).then(() => history.go(0)).catch(() => setState('failed'));
+    }).then(code => {
+      if(code === 200) {
+        history.go(0);
+      } else if(code === 400) {
+        setState('failed-parameter')
+      }
+    }, () => setState('failed'));
   }
   return (
     <>

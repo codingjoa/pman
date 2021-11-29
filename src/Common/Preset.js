@@ -4,6 +4,40 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Modal from 'react-bootstrap/Modal'
 import Row from 'react-bootstrap/Row'
+import axios from 'axios'
+
+async function download({
+  fileName,
+  fileUrl,
+}) {
+  const res = await axios({
+    url: fileUrl,
+    method: 'GET',
+    responseType: 'blob'
+  });
+  const blob = res.data;
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
+export function FileDownload({
+  fileName,
+  fileUrl,
+}) {
+  const handleClick = event => {
+    event.preventDefault();
+    download({
+      fileName,
+      fileUrl,
+    });
+  }
+  return <a onClick={handleClick} target="_blank" rel="noreferrer" href="#">{fileName}</a>;
+}
 
 export function ModalPreset({
   children,

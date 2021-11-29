@@ -3,8 +3,6 @@ module.exports = (app, TeamWikiModel) => {
     constructor(req) {
       super(req);
       this.wikiID = req.params?.wikiID;
-      this.wikiTitle = req.body?.wikiTitle;
-      this.wikiContent = req.body?.wikiContent;
     }
 
     async read(res) {
@@ -33,7 +31,9 @@ module.exports = (app, TeamWikiModel) => {
         if(!result.affectedRows) {
           throw new TeamWikiDetailModel.Error403();
         }
-        res.json(wiki[0]);
+        res.json({
+          complete: true,
+        });
       });
     }
 
@@ -56,4 +56,6 @@ module.exports = (app, TeamWikiModel) => {
   }
   app(TeamWikiDetailModel);
   app.read();
+  app.update();
+  app.delete();
 }
