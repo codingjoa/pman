@@ -37,6 +37,7 @@ module.exports = (app, OauthModel) => {
     }
 
     async read(res) {
+      this.checkParameters(this.code);
       const payload = await this.getPayload();
       const user = await this.dao.serialize(async db => {
         return await this.signIn(db, payload) ?? await this.signUp(db, payload);
@@ -45,7 +46,7 @@ module.exports = (app, OauthModel) => {
       // XSS, CSRF 취약점
       res.cookie('refreshToken', refreshToken, {
         maxAge: expiresIn,
-        secure: false,
+        secure: true,
         httpOnly: true
       });
       res.json({

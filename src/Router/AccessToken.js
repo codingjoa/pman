@@ -2,75 +2,21 @@ import axios from 'axios';
 import React from 'react'
 import PageRouter from './PageRouter'
 
-const AccessTokenContext = React.createContext(null);
-const DeveloperAccessToken = process.env.REACT_APP_ACCESS_TOKEN;
-let currentAccessToken = null;
+import { getAuthorized } from '@/ajax'
 
-async function refreshToken() {
-  try {
-    /*
-      react-script 서버로 실행했을 때 이 함수가 2번 실행되는 버그가 있습니다.
-      setupProxy.js 설정 또는 내부 디버그 툴에 의한 발생으로 추정됩니다.
-      모든 도메인이 해당되며 axios가 있는 함수는 모두 해당됩니다.
-      react-script build후 실제 SPA 서버로 하면 해결됩니다.
-    */
-    const res = await axios('/api/v1/oauth/refresh');
-    return res.data?.accessToken;
-  } catch(err) {
-    return undefined;
-  }
+const AccessTokenContext = React.createContext(null);
+
+export default function AccessToken() {
+  const [ authorized, setAuthorized ] = React.useState(null);
+  React.useLayoutEffect(() => {
+    getAuthorized().then(state => setAuthorized(state));
+  });
+  return <AccessTokenContext.Provider value={authorized} ><PageRouter authorized={authorized} /></AccessTokenContext.Provider>
 }
-function getAccessToken() {
-  return currentAccessToken;
-}
-async function setAccessToken() {
-  const token = await refreshToken();
-  if(token === undefined) {
-    currentAccessToken = null;
-    return false;
-  }
-  currentAccessToken = token ?? null;
-  if(currentAccessToken) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${currentAccessToken}`;
-  }
-  return true;
-}
-async function autoRefresh() {
-  // refresh token 자동갱신(새로고침 없이 1시간 30분 경과시)
-  (await setAccessToken() === true) && setTimeout(autoRefresh, 5400000);
-}
-async function createAccessToken() {
-  if(DeveloperAccessToken) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${DeveloperAccessToken}`;
-    return function getAccessToken() {
-      return DeveloperAccessToken;
-    };
-  }
-  await autoRefresh();
-  return getAccessToken;
-}
-function useAccessToken() {
-  const state = React.useContext(AccessTokenContext);
-  return state;
-}
-function useAuthorized() {
+export function useAuthorized() {
   const state = React.useContext(AccessTokenContext);
   if(state) {
     return true;
   }
   return state;
 }
-const AccessToken = React.memo(function AccessToken() {
-  const [ state, setState ] = React.useState(null);
-  createAccessToken().then(accessToken => setState(accessToken)).catch(() => setState(false));
-  return (
-    <AccessTokenContext.Provider
-      value={state}
-    >
-      <PageRouter />
-    </AccessTokenContext.Provider>
-  );
-});
-
-export { useAccessToken, useAuthorized };
-export default AccessToken;

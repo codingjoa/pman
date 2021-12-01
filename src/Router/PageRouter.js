@@ -13,13 +13,11 @@ import Login from 'UnauthUI/Login'
 import Invite from 'Action/Invite'
 import OAuth2 from 'Action/OAuth2'
 
-export default function PageRouter() {
-
-  //const [ view, setView ] = React.useState(null);
-  // Promise가 끝남은 AccessToken 재발급 과정을 포함합니다.
-  const state = AccessToken.useAuthorized();
+export default function PageRouter({
+  authorized
+}) {
   const view = React.useMemo(() => {
-    if(state === true) {
+    if(authorized === true) {
       return <ReactRouter.Switch>
         <ReactRouter.Route exact path="/">
           <ReactRouter.Redirect
@@ -49,7 +47,7 @@ export default function PageRouter() {
           404 Not Found
         </ReactRouter.Route>
       </ReactRouter.Switch>;
-    } else if(state === false) {
+    } else if(authorized === false) {
       return <ReactRouter.Switch>
         <ReactRouter.Route exact path="/oauth">
           <OAuth2 />
@@ -65,20 +63,8 @@ export default function PageRouter() {
       </ReactRouter.Switch>;
     } else {
       // promise가 끝나기 전까지는 화면을 뿌리면 안되기 때문에 state null로
-      return null;
+      return <>잠시만 기다려 주세요.</>;
     }
-  }, [ state ]);
-  /*
-  React.useLayoutEffect(() => {
-
-    promise.then(getAccessToken => {
-      getAccessToken() ? setView(
-
-      ) : setView(
-
-      );
-    });
-  }, []);
-  */
+  }, [ authorized ]);
   return view;
 }

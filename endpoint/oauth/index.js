@@ -4,6 +4,8 @@ const path = require('path');
 const mkdirp = require('mkdirp');
 const Identicon = require('identicon.js');
 const env = require('../../loadModules').env;
+const DEV = process.env.DEV === 'true';
+const EXPIRES_IN_HOUR = !DEV ? 2 : 24;
 
 async function createDefaultProfile() {
   const defaultHash = crypto.randomBytes(8).toString('hex');
@@ -31,7 +33,7 @@ module.exports = (app, Model) => {
   class OauthModel extends Model {
     createTokens(id) {
       // accessToken과 refresh 토큰을 생성하여 반환합니다.
-      const expiresIn = 60 * 60 * 2; // 2hour
+      const expiresIn = 60 * 60 * EXPIRES_IN_HOUR; // 2hour
       const accessToken = this.jwt.createJWT({ id }, expiresIn);
       const refreshToken = this.jwt.createJWT({ id }, expiresIn * 2);
       return {

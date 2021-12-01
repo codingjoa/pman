@@ -27,3 +27,14 @@ app.addErrorType(Model.Error500, {
   status: 500,
 });
 app.listen(5000);
+/*
+const proto = app.getProto();
+const https = require('https');
+const fs = require('fs');
+const credentials = {
+  cert: fs.readFileSync(process.env.SSL_CERT, 'utf8'),
+  key: fs.readFileSync(process.env.SSL_KEY, 'utf8'),
+};
+const server = https.createServer(credentials, proto);
+server.listen(50000);
+*/

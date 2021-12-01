@@ -7,7 +7,7 @@ module.exports = (app, OauthModel) => {
 
     async read(res) {
       if(!this.refreshToken) {
-        throw new Error('403 권한 없음');
+        throw new OauthRefresh.Error403();
       }
       // 토큰 생성
       const { id: userID } = this.jwt.validateJWT(this.refreshToken);
@@ -15,7 +15,7 @@ module.exports = (app, OauthModel) => {
       // XSS, CSRF 취약점
       res.cookie('refreshToken', refreshToken, {
         maxAge: expiresIn,
-        secure: false,
+        secure: true,
         httpOnly: true
       });
       res.json({

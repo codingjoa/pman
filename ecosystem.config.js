@@ -5,14 +5,13 @@ module.exports = {
     watch: false,
     restart_delay: 30000,
     env: {
-      'PORT': 4000,
+      'PORT': 50080,
       'HTTPS': true,
-      'SSL_CRT_FILE': './ssl/cert.crt',
-      'SSL_KEY_FILE': './ssl/cert.key'
+      'SSL_CRT_FILE': '/etc/letsencrypt/live/codingjoa.kro.kr/cert.pem',
+      'SSL_KEY_FILE': '/etc/letsencrypt/live/codingjoa.kro.kr/privkey.pem',
     },
     env_dev: {
-      'PORT': 4000,
-      'HTTPS': false
+      'PORT': 50080,
     }
   }, {
     name: 'pman-restAPI',
@@ -25,13 +24,16 @@ module.exports = {
       'PROXY': true,
       'APIKEY_KAKAO': './secret/key.kakao.js',
       'MARIADB_NAME': 'pman',
-      'FRONT_DOMAIN': 'https://txshi.iptime.org',
-      'JEKO_HOME': `${process.env.HOME}/jeko`
+      'FRONT_DOMAIN': 'https://codingjoa.kro.kr:50080',
+      'JEKO_HOME': `${process.env.HOME}/jeko`,
+      'SSL_CERT': '/etc/letsencrypt/live/codingjoa.kro.kr/cert.pem',
+      'SSL_KEY': '/etc/letsencrypt/live/codingjoa.kro.kr/privkey.pem',
     },
     env_dev: {
       'DEBUG': '1',
       'ERROR': '1',
-      'FRONT_DOMAIN': 'http://txshi.iptime.org:50080'
+      'FRONT_DOMAIN': 'https://codingjoa.kro.kr:50080',
+      'DEV': true,
     }
   }],
 
