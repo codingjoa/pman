@@ -43,7 +43,7 @@ app.get('/*', function (req, res) {
 
 // SPA Server
 
-const server = option ? (require('https').createServer(options, app)) : (require('http').createServer({}, app));
+const server = option ? (require('https').createServer(option, app)) : (require('http').createServer({}, app));
 server.listen(PORT);
 
 /* Linux Signal */
