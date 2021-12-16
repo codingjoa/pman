@@ -1,20 +1,6 @@
 module.exports = (app, TeamModel) => {
   class TeamDetailModel extends TeamModel {
 
-    async checkTeamMember(db) {
-      const result = await db.get(`select
-        team.teamProfileName,
-        count(teamMember.userID=?)>0 as isTeamMember
-      from
-        team left join teamMember on
-          team.teamID=teamMember.teamID
-      where
-        team.teamID=?`, [
-        this.requestUserID, this.teamID
-      ]);
-      return result[0]?.isTeamMember===1;
-    }
-
     async checkTeamOwned(db) {
       const result = await db.get(`select
         team.teamOwnerUserID=? as isTeamOwner,
@@ -58,7 +44,8 @@ module.exports = (app, TeamModel) => {
             then user.userProfileImgDefault
             else user.userProfileImg
           end as teamOwnerUserImg,
-          teamWebhook.webhookURL
+          teamWebhook.webhookURL,
+          team.teamOwnerUserID=? as owned
         from
           team left join teamMember on
             team.teamID=teamMember.teamID left join
@@ -68,7 +55,7 @@ module.exports = (app, TeamModel) => {
             team.teamID=teamWebhook.teamID
         where
           team.teamID=?`, [
-          this.teamID
+          this.requestUserID, this.teamID
         ]);
         const users = await db.get(`select
           teamMember.userID,

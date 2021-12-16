@@ -8,6 +8,20 @@ module.exports = (app, Model) => {
       this.teamProfileDescription = req.body?.teamProfileDescription;
     }
 
+    async checkTeamMember(db) {
+      const result = await db.get(`select
+        team.teamProfileName,
+        count(teamMember.userID=?)>0 as isTeamMember
+      from
+        team left join teamMember on
+          team.teamID=teamMember.teamID
+      where
+        team.teamID=?`, [
+        this.requestUserID, this.teamID
+      ]);
+      return result[0]?.isTeamMember===1;
+    }
+
     async create(res) {
       this.isAuthorized();
       this.checkParameters(
@@ -57,6 +71,6 @@ module.exports = (app, Model) => {
   app(TeamModel);
   app.create();
   app.read();
-  app.child('/:teamID', require('./detail'));
   app.child('/invite', require('./invite'));
+  app.child('/:teamID', require('./detail'));
 }

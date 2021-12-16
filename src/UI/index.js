@@ -1,56 +1,54 @@
-import React from 'react';
 import * as ReactRouter from 'react-router-dom'
 
-import User from './User'
+// bootstrap
+import Container from 'react-bootstrap/Container'
+import Col from 'react-bootstrap/Col'
+import Row from 'react-bootstrap/Row'
+
+import Invite from 'Action/Invite'
+import MyInfo from './MyInfo'
+import TeamList from './TeamList'
 import Team from './Team'
 
-// bootstrap
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'css/share.css'
-import Container from 'react-bootstrap/Container'
-
-function UI() {
+export default function UI() {
   return (
-    <Container>
-      <Container className="mt-4">
-      <ReactRouter.Switch>
-        <ReactRouter.Route exact path="/ui/user">
-          <User />
-        </ReactRouter.Route>
-        <ReactRouter.Route path="/ui/team/:teamID">
-          <Team />
-        </ReactRouter.Route>
-      </ReactRouter.Switch>
-      </Container>
+    <Container className="mt-4">
+      <Row>
+        <Col xs="3">
+          <MyInfo />
+        </Col>
+        <Col>
+          <ReactRouter.Switch>
+            <ReactRouter.Route path="/oauth">
+              <ReactRouter.Redirect
+                to={{ pathname: "/ui/team" }}
+              />
+            </ReactRouter.Route>
+            <ReactRouter.Route path="/login">
+              <ReactRouter.Redirect
+                to={{ pathname: "/ui/team" }}
+              />
+            </ReactRouter.Route>
+            <ReactRouter.Route path="/invite">
+              <Invite />
+            </ReactRouter.Route>
+            <ReactRouter.Route path="/ui/team/:teamID">
+              <Team />
+            </ReactRouter.Route>
+            <ReactRouter.Route path="/ui/team">
+              <TeamList />
+            </ReactRouter.Route>
+            <ReactRouter.Route path="/">
+              <ReactRouter.Redirect
+                to={{ pathname: "/ui/team" }}
+              />
+            </ReactRouter.Route>
+            <ReactRouter.Route path="*">
+              404 Not Found
+            </ReactRouter.Route>
+          </ReactRouter.Switch>
+        </Col>
+      </Row>
     </Container>
   );
 }
-
-export default React.memo(UI);
-
-/*
-<Container fluid="sm">
-  <Row>
-
-  </Row>
-  <Row>
-    <Col sm="3">
-      <ReactRouter.BrowserRouter>
-        <ReactRouter.Route path="/team/:teamID">
-          <Detail />
-        </ReactRouter.Route>
-      </ReactRouter.BrowserRouter>
-    </Col>
-    <Col sm="9">
-      <ReactRouter.Switch>
-        <ReactRouter.Route exact path="/team/:teamID">
-          <Schedules />
-        </ReactRouter.Route>
-        <ReactRouter.Route exact path="/team/:teamID/schedule/:scheduleID">
-          <ScheduleDetail />
-        </ReactRouter.Route>
-      </ReactRouter.Switch>
-    </Col>
-  </Row>
-</Container>
-*/

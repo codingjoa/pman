@@ -4,7 +4,7 @@ import * as ReactRouter from 'react-router-dom'
 import { useFetched } from 'Hook/useFetching'
 import UserFigure from 'Common/UserFigure'
 import { Time } from 'Common/TimeStamp'
-
+import Button from 'react-bootstrap/Button'
 
 async function kick({
   teamID,
@@ -19,6 +19,7 @@ async function kick({
 function Kick({
   userID,
   userName,
+  disabled
 }) {
   const params = ReactRouter.useParams();
   const history = ReactRouter.useHistory();
@@ -35,12 +36,13 @@ function Kick({
   };
   return (
     <>
-      <button onClick={handleClick}>삭제</button>
+      <Button disabled={disabled} onClick={handleClick}>삭제</Button>
     </>
   );
 }
 
 function User(row, index) {
+  const fetchedData = useFetched();
   return (
     <tr key={index}>
       <td>{row.userID}</td>
@@ -53,7 +55,7 @@ function User(row, index) {
         </Time>
       </td>
       <td>
-        <Kick userID={row.userID} userName={row.userProfileName} />
+        {fetchedData.owned===1 && <Kick disabled={!!row.isOwner} userID={row.userID} userName={row.userProfileName} />}
       </td>
     </tr>
   );
@@ -69,7 +71,15 @@ export default function TeamUsers() {
   return (
     <>
       <div className="line"></div>
-      <table>
+      <table className="width-full">
+        <thead>
+          <tr>
+            <th>번호</th>
+            <th>이름</th>
+            <th>참가일</th>
+            <th>비고</th>
+          </tr>
+        </thead>
         <tbody>
           {list}
         </tbody>

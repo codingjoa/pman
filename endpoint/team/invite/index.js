@@ -13,7 +13,7 @@ module.exports = (app, TeamModel) => {
     }
 
     async checkReadPermissions(db) {
-      if(await this.isTeamMember()) {
+      if(await this.checkTeamMember(db)) {
         throw new TeamInvite.Error400('USER_EXISTS');
       }
       const teams = await db.get('select team.teamInviteCount, count(teamMember.userID=?)>0 as isJoined from team left join teamMember on team.teamID=teamMember.teamID where team.teamID=?', [

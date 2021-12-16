@@ -11,7 +11,7 @@ import fetchTeams from 'Async/fetchTeams'
 function TeamListDom(row) {
   const badge = row.isOwn ? <Badge bg="secondary">팀장</Badge> : null;
   return (
-    <Row>
+    <Row className="mb-2">
       <Card>
         <Card.Body>
           <Card.Title>{row.teamProfileName}{badge}</Card.Title>

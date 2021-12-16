@@ -1,5 +1,3 @@
-import BackNavigation from './BackNavigation'
-import Info from './Info'
 import ScheduleDetail from './ScheduleDetail'
 import ScheduleList from './ScheduleList'
 import ScheduleListOption from './ScheduleListOption'
@@ -13,6 +11,7 @@ import * as ReactRouter from 'react-router-dom'
 // bootstrap
 import Col from 'react-bootstrap/Col'
 import Container from 'react-bootstrap/Container'
+import Nav from 'react-bootstrap/Nav'
 import Row from 'react-bootstrap/Row'
 
 import { useFetching, useFetched } from 'Hook/useFetching'
@@ -20,6 +19,7 @@ import fetchTeam from 'Async/fetchTeam'
 
 function TeamDetail() {
   const team = useFetched();
+  const params = ReactRouter.useParams();
   return (
     <Container fluid="sm" className="mb-4">
       <Row>
@@ -29,23 +29,29 @@ function TeamDetail() {
         </Col>
       </Row>
       <Row>
-        <Col sm="3" md="3" lg="3" xl="2">
-          <ReactRouter.Switch>
-            <ReactRouter.Route exact path="/ui/team/:teamID">
-              <TeamNavigation />
-            </ReactRouter.Route>
-            <ReactRouter.Route exact path="/ui/team/:teamID/schedule/:scheduleID">
-              <BackNavigation backUrl={teamID => `/ui/team/${teamID}`} />
-            </ReactRouter.Route>
-          </ReactRouter.Switch>
-        </Col>
+        <Nav className="justify-content-center">
+          <Nav.Link as={ReactRouter.Link} to={`/ui/team/${params.teamID}`}>
+            일정
+          </Nav.Link>
+          <Nav.Link as={ReactRouter.Link} to={`/ui/team/${params.teamID}/user`}>
+            팀원
+          </Nav.Link>
+          <Nav.Link as={ReactRouter.Link} to={`/ui/team/${params.teamID}/setting`}>
+            관리
+          </Nav.Link>
+        </Nav>
+      </Row>
+      <Row>
         <Col>
           <ReactRouter.Switch>
             <ReactRouter.Route exact path="/ui/team/:teamID">
               <ScheduleList />
-              <Info />
-              <Settings />
+            </ReactRouter.Route>
+            <ReactRouter.Route exact path="/ui/team/:teamID/user">
               <TeamUsers />
+            </ReactRouter.Route>
+            <ReactRouter.Route exact path="/ui/team/:teamID/setting">
+              <Settings />
             </ReactRouter.Route>
             <ReactRouter.Route exact path="/ui/team/:teamID/schedule">
               <ScheduleListOption />

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import * as ReactRouter from 'react-router-dom'
+import Button from 'react-bootstrap/Button'
 
 async function deleteTeam({
   teamID
@@ -27,7 +28,7 @@ export default function DeleteTeam() {
   };
   return (
     <>
-      <button onClick={accept}>팀 삭제</button>
+      <Button onClick={accept}>팀 삭제</Button>
     </>
   );
 }
