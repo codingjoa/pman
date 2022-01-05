@@ -19,9 +19,7 @@ module.exports = {
     watch: false,
     restart_delay: 30000,
     env: {
-      'MARIADB': true,
       'JWT': true,
-      'PROXY': true,
       'APIKEY_KAKAO': './secret/key.kakao.js',
       'MARIADB_NAME': 'pman',
       'FRONT_DOMAIN': 'https://codingjoa.kro.kr:50080',
