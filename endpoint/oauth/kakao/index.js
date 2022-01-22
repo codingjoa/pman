@@ -1,9 +1,11 @@
 const axios = require('axios');
-const env = require('../../../loadModules').env;
+const path = require('path');
+const ROOT = process.cwd();
+const env = process.env.APIKEY_KAKAO && require(path.join(ROOT, process.env.APIKEY_KAKAO));
 const kakao = {
-  apiKey: env.APIKEY_KAKAO,
+  apiKey: env?.apiKey,
   accountType: 1,
-  callbackURI: env.CALLBACK_KAKAO
+  callbackURI: env?.callbackURI
 };
 
 module.exports = (app, OauthModel) => {

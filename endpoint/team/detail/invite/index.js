@@ -1,3 +1,4 @@
+const FRONT_DOMAIN = process.env.FRONT_DOMAIN ?? 'localhost';
 module.exports = (app, TeamDetailModel) => {
   class TeamInviteCreate extends TeamDetailModel {
     async checkCreatePermissions(db) {
@@ -39,7 +40,7 @@ module.exports = (app, TeamDetailModel) => {
         res.json({
           inviteToken,
           inviteCount: teamInviteCount,
-          inviteURL: new URL(`/invite?token=${inviteToken}`, TeamInviteCreate.env.FRONT_DOMAIN).href,
+          inviteURL: new URL(`/invite?token=${inviteToken}`, FRONT_DOMAIN).href,
         });
       });
     }

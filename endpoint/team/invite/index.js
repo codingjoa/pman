@@ -1,6 +1,4 @@
-const path = require('path');
-const ROOT = process.cwd();
-const env = require(path.join(ROOT, '/loadModules.js')).env;
+const FRONT_DOMAIN = process.env.FRONT_DOMAIN ?? 'localhost';
 module.exports = (app, TeamModel) => {
   class TeamInvite extends TeamModel {
     constructor(req) {
@@ -36,7 +34,7 @@ module.exports = (app, TeamModel) => {
           throw new TeamInvite.Error500('DB_ERROR');
         }
         res.json({
-          redirectURL: new URL(`/team/${this.teamID}`, env.FRONT_DOMAIN).href
+          redirectURL: new URL(`/team/${this.teamID}`, FRONT_DOMAIN).href
         });
       });
     }

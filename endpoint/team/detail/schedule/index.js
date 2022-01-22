@@ -1,3 +1,4 @@
+const FRONT_DOMAIN = process.env.FRONT_DOMAIN ?? 'localhost';
 module.exports = (app, TeamDetailModel) => {
   class TeamScheduleModel extends TeamDetailModel {
     constructor(req) {
@@ -29,7 +30,7 @@ module.exports = (app, TeamDetailModel) => {
         if(!webhooks[0]) {
           return;
         }
-        const frontURL = new URL(`/ui/team/${this.teamID}/schedule/${scheduleID}`, TeamScheduleModel.env.FRONT_DOMAIN).href;
+        const frontURL = new URL(`/ui/team/${this.teamID}/schedule/${scheduleID}`, FRONT_DOMAIN).href;
         super.publishWebhook(webhooks[0].webhookURL, users[0], message, frontURL);
       }).catch(console.error);
     }

@@ -1,5 +1,12 @@
-const DAO = require('../loadModules').DAO;
-const env = require('../loadModules').env;
+const createDao = require('../loadModules').DAO;
+const DAO = createDao({
+  host: 'localhost',
+  port: process.env.MARIADB_PORT ?? 3306,
+  user: 'ky',
+  database: process.env.MARIADB_NAME,
+  password: '1234',
+  connectionLimit: 5,
+});
 const jwt = require('./jwt');
 const axios = require('axios');
 const FileSystem = require('../loadModules').FileSystem;
@@ -66,7 +73,6 @@ class Model {
   static Error404 = Error404;
   static Error500 = Error500;
   static uploadFileExecute = uploadFileExecute;
-  static env = env;
 
   constructor(req) {
     this.dao = new DAO(); // db 상호작용에 사용
